@@ -144,12 +144,14 @@ const VN = (() => {
         ASSET.frameNo, ASSET.frameNoMask, W, TB_H
       );
       if (frameOff) tbCtx.drawImage(frameOff, 0, 0);
-      // Narrator text: use left-align so original full-width spaces work correctly
+      // Narrator text: centre-align to match original PSG engine appearance.
+      // Leading ideographic spaces and !s tags are stripped in showText() so
+      // CSS centering positions each line correctly.
       dialogueArea.style.left      = '30px';
       dialogueArea.style.right     = '30px';
       dialogueArea.style.top       = '16px';
       dialogueArea.style.bottom    = '14px';
-      dialogueArea.style.textAlign = 'left';
+      dialogueArea.style.textAlign = 'center';
     }
   }
 
@@ -258,15 +260,31 @@ const VN = (() => {
   }
 
   // ── Fade ──────────────────────────────────────────
-  function doFade(duration, onDone) {
+  // flag 1 = fade IN  (overlay opaque → transparent; reveal canvas)
+  // flag 0 = fade OUT (overlay transparent → opaque; hide canvas)
+  // other  = full scene-transition (out then in)
+  function doFade(duration, flag, onDone) {
     const ms = skipping ? 0 : Math.min(duration, 1500);
-    fadeOverlay.style.transition = `opacity ${ms/2}ms ease`;
-    fadeOverlay.style.opacity = '1';
-    setTimeout(() => {
-      fadeOverlay.style.transition = `opacity ${ms/2}ms ease`;
+    if (flag === 1) {
+      // Reveal: overlay fades away
+      fadeOverlay.style.transition = skipping ? 'none' : `opacity ${ms}ms ease`;
       fadeOverlay.style.opacity = '0';
-      setTimeout(onDone, skipping ? 0 : ms / 2);
-    }, skipping ? 0 : ms / 2);
+      setTimeout(onDone, skipping ? 0 : ms);
+    } else if (flag === 0) {
+      // Hide: overlay fades in (covers canvas)
+      fadeOverlay.style.transition = skipping ? 'none' : `opacity ${ms}ms ease`;
+      fadeOverlay.style.opacity = '1';
+      setTimeout(onDone, skipping ? 0 : ms);
+    } else {
+      // Full scene transition: hide then reveal
+      fadeOverlay.style.transition = skipping ? 'none' : `opacity ${ms/2}ms ease`;
+      fadeOverlay.style.opacity = '1';
+      setTimeout(() => {
+        fadeOverlay.style.transition = skipping ? 'none' : `opacity ${ms/2}ms ease`;
+        fadeOverlay.style.opacity = '0';
+        setTimeout(onDone, skipping ? 0 : ms / 2);
+      }, skipping ? 0 : ms / 2);
+    }
   }
 
   // ── Text rendering ────────────────────────────────
@@ -277,7 +295,15 @@ const VN = (() => {
 
   function showText(text, jp) {
     const display = (currentLang !== 'jp' && text && text !== jp) ? text : jp;
-    fullText = display.replace(/\x07/g, '').replace(/!s/g, '').trim();
+    // Strip engine formatting codes (!s = PSG centre-line tag, \x07 = bell)
+    // Strip leading ideographic spaces (U+3000) from every line — the original
+    // text uses them as padding for centring, but we centre via CSS instead.
+    const stripped = display.replace(/\x07/g, '').replace(/!s/g, '');
+    fullText = stripped
+      .split('\n')
+      .map(line => line.replace(/^\u3000+/, ''))   // strip leading wide spaces
+      .join('\n')
+      .trim();
     charIdx = 0;
     textbox.style.display = 'block';
     dialogueEl.textContent = '';
@@ -349,7 +375,7 @@ const VN = (() => {
 
         case 'fade':
           if (ev.duration > 0) {
-            doFade(ev.duration, execute);
+            doFade(ev.duration, ev.flag, execute);
             return;
           }
           break;
@@ -467,11 +493,16 @@ const VN = (() => {
   // ── Script loader ─────────────────────────────────
   async function loadScript(name) {
     updateStatus(`Loading ${name}...`);
+    // Clear all canvases so no previous scene bleeds into the new script
+    bgCtx.clearRect(0, 0, W, H);
     sprCtx.clearRect(0, 0, W, H);
     textbox.style.display = 'none';
     tbCtx.clearRect(0, 0, W, TB_H);
     choiceMenu.style.display = 'none';
-    fadeOverlay.style.opacity = '0';
+    // Start with overlay opaque (black) so that the script's initial fade:1
+    // event does a proper fade-in reveal rather than a flash-to-black.
+    fadeOverlay.style.transition = 'none';
+    fadeOverlay.style.opacity    = '1';
     pendingLoads = [];
     clearPortrait();
     nextTextColor = '#e8eeff';
