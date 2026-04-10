@@ -17,6 +17,8 @@ const VN = (() => {
   const clickInd    = document.getElementById('click-indicator');
   const fadeOverlay = document.getElementById('fade-overlay');
   const choiceMenu  = document.getElementById('choice-menu');
+  const uiOverlay   = document.getElementById('ui-overlay');
+  const uiImg       = document.getElementById('ui-img');
   const statusEl    = document.getElementById('status');
   const scriptSel   = document.getElementById('script-select');
   const langSel     = document.getElementById('lang-select');
@@ -38,8 +40,10 @@ const VN = (() => {
   let currentLayer  = 0;
   let hasPortrait   = false;
   let currentPortrait = null;
+  let portraitSide  = 'left';  // 'left' (textwins) | 'right' (l_wins)
   let nextTextColor = '#e8eeff';
   let pendingLoads  = [];
+  let uiTimer       = null;
 
   // ── Asset paths ───────────────────────────────────
   const ASSET = {
@@ -50,6 +54,8 @@ const VN = (() => {
     se:            name => `assets/se/${name}.wav`,
     frameWith:     'assets/ui/textwins.jpg',
     frameWithMask: 'assets/sprites/textwins_.jpg',
+    frameLeft:     'assets/sprites/l_wins.jpg',      // right-side portrait frame
+    frameLeftMask: 'assets/sprites/l_wins_.jpg',
     frameNo:       'assets/sprites/textwinc.jpg',
     frameNoMask:   'assets/sprites/textwinc_.jpg',
   };
@@ -93,6 +99,7 @@ const VN = (() => {
   }
 
   loadImg(ASSET.frameWith);  loadImg(ASSET.frameWithMask);
+  loadImg(ASSET.frameLeft);  loadImg(ASSET.frameLeftMask);
   loadImg(ASSET.frameNo);    loadImg(ASSET.frameNoMask);
 
   // ── Canvas compositing ────────────────────────────
@@ -125,16 +132,33 @@ const VN = (() => {
     portCtx.clearRect(0, 0, PORT_W, PORT_H);
 
     if (hasPortrait && currentPortrait) {
+      const isRight = portraitSide === 'right';
+      // Right-side portrait uses l_wins (left-border only frame, portrait on right).
+      // Left-side portrait uses textwins (right-border only frame, portrait on left).
+      const frameSrc  = isRight ? ASSET.frameLeft     : ASSET.frameWith;
+      const frameMask = isRight ? ASSET.frameLeftMask  : ASSET.frameWithMask;
+
       const [frameOff, faceOff] = await Promise.all([
-        compositeToCanvas(ASSET.frameWith, ASSET.frameWithMask, FRAME_W, FRAME_H),
+        compositeToCanvas(frameSrc, frameMask, FRAME_W, FRAME_H),
         compositeToCanvas(ASSET.sprite(currentPortrait), ASSET.mask(currentPortrait),
                           PORT_W, PORT_H, 150, 200),
       ]);
-      if (frameOff) tbCtx.drawImage(frameOff, FRAME_X, 0);
+      // l_wins: frame at x=0 (left edge); textwins: frame at x=170 (right of portrait slot)
+      if (frameOff) tbCtx.drawImage(frameOff, isRight ? 0 : FRAME_X, 0);
       if (faceOff)  portCtx.drawImage(faceOff, 0, 0);
-      // Text area: right of portrait slot
-      dialogueArea.style.left      = '188px';
-      dialogueArea.style.right     = '18px';
+
+      // Move portrait canvas to the appropriate side
+      if (isRight) {
+        portCanvas.style.left  = 'auto';
+        portCanvas.style.right = '0';
+      } else {
+        portCanvas.style.left  = '0';
+        portCanvas.style.right = 'auto';
+      }
+
+      // Text area is on the opposite side from the portrait
+      dialogueArea.style.left      = isRight ? '18px'  : '188px';
+      dialogueArea.style.right     = isRight ? '188px' : '18px';
       dialogueArea.style.top       = '16px';
       dialogueArea.style.bottom    = '14px';
       dialogueArea.style.textAlign = 'left';
@@ -210,7 +234,30 @@ const VN = (() => {
   function clearPortrait() {
     currentPortrait = null;
     hasPortrait = false;
+    portraitSide = 'left';
     portCtx.clearRect(0, 0, PORT_W, PORT_H);
+    portCanvas.style.left  = '0';
+    portCanvas.style.right = 'auto';
+  }
+
+  // ── Testimony / action UI overlay ────────────────
+  // duration=0  → persistent (shown until hideUIOverlay() or loadScript())
+  // duration>0  → auto-hide after ms
+  function showUIOverlay(name, duration) {
+    clearTimeout(uiTimer);
+    uiImg.src     = `assets/ui/${name}.jpg`;
+    uiImg.onerror = () => {};           // silently ignore missing assets
+    uiOverlay.style.display = 'block';
+    if (duration > 0) {
+      uiTimer = setTimeout(() => { uiOverlay.style.display = 'none'; },
+                           skipping ? 0 : duration);
+    }
+  }
+
+  function hideUIOverlay() {
+    clearTimeout(uiTimer);
+    uiTimer = null;
+    uiOverlay.style.display = 'none';
   }
 
   // ── Image dispatch ────────────────────────────────
@@ -373,8 +420,30 @@ const VN = (() => {
           loadImage(ev.name);
           break;
 
-        case 'load_ui':
+        case 'load_ui': {
+          const uiName = (ev.name || '').toLowerCase();
+          if (uiName === 'l_wins') {
+            // Prosecutor / judge speaks — portrait moves to right side
+            portraitSide = 'right';
+          } else if (uiName === 'textwins') {
+            // Defence / character speaks — portrait on left (default)
+            portraitSide = 'left';
+          } else if (uiName === 'han_m01') {
+            // 証言中 — persistent "testimony in progress" corner indicator
+            showUIOverlay('han_m01', 0);
+          } else if (uiName === 'han_m04') {
+            // End of testimony — hide indicator
+            hideUIOverlay();
+          } else if (uiName === 'han_m05') {
+            // 証言開始 — "testimony start" flash (auto-hide after 1.5 s)
+            showUIOverlay('han_m05', 1500);
+          } else if (/^han_m1[0-4]$/.test(uiName)) {
+            // Brief action markers (han_m10–han_m14, auto-hide after 1 s)
+            showUIOverlay(uiName, 1000);
+          }
+          // han_m27 (navigation map) and all other load_ui names: ignore
           break;
+        }
 
         case 'set_layer':
           currentLayer = ev.layer;
@@ -511,7 +580,8 @@ const VN = (() => {
     fadeOverlay.style.transition = 'none';
     fadeOverlay.style.opacity    = '1';
     pendingLoads = [];
-    clearPortrait();
+    clearPortrait();          // also resets portraitSide → 'left'
+    hideUIOverlay();
     nextTextColor = '#e8eeff';
     try {
       const res = await fetch(`scripts/${name}.json`);
@@ -551,6 +621,7 @@ const VN = (() => {
       sprCtx.clearRect(0, 0, W, H);
       tbCtx.clearRect(0, 0, W, TB_H);
       clearPortrait();
+      hideUIOverlay();
       events = []; cursor = 0; waitingClick = false; waitSource = null;
       if (window._showMenu) window._showMenu();
     },

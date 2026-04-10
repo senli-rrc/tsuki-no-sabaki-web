@@ -27677,6 +27677,10 @@
       "op": "fade",
       "duration": 1000,
       "flag": 1
+    },
+    {
+      "op": "goto_script",
+      "target": "mitsuki"
     }
   ]
 }

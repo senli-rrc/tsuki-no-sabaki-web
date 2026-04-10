@@ -17710,10 +17710,8 @@
       "flag": 0
     },
     {
-      "op": "text",
-      "jp": "�\u0003",
-      "text": "�\u0003",
-      "offset": 126789
+      "op": "goto_script",
+      "target": "haruka"
     }
   ]
 }
