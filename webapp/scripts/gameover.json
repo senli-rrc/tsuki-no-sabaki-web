@@ -1,0 +1,368 @@
+{
+  "script": "gameover.scr",
+  "lang": "jp",
+  "events": [
+    {
+      "op": "set_flag",
+      "flag": 10,
+      "value": 0
+    },
+    {
+      "op": "set_flag",
+      "flag": 5,
+      "value": 0
+    },
+    {
+      "op": "set_flag",
+      "flag": 1,
+      "value": 0
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "nanako01"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "wait",
+      "frames": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "nanako02"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "nanako03"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "play_sound",
+      "file": "han_se015"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "nanako04"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "wait",
+      "frames": 15
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "han_t01"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cel01f"
+    },
+    {
+      "op": "color_fade",
+      "mode": 2,
+      "r": 255,
+      "g": 255,
+      "b": 255,
+      "val": 1054
+    },
+    {
+      "op": "play_sound",
+      "file": "han_se009"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "　\n　　　そこまでっ！\n",
+      "text": "　\n　　　そこまでっ！\n",
+      "offset": 537
+    },
+    {
+      "op": "color_fade",
+      "mode": 1,
+      "r": 255,
+      "g": 255,
+      "b": 255,
+      "val": 28674
+    },
+    {
+      "op": "text",
+      "jp": "本法廷は、これ以上の審議の\n必要性を認めません。\n",
+      "text": "本法廷は、これ以上の審議の\n必要性を認めません。\n",
+      "offset": 679
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cel02f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "弁護人の反証は、検察側の主張を\n覆すチカラを持っていません！\n",
+      "text": "弁護人の反証は、検察側の主張を\n覆すチカラを持っていません！\n",
+      "offset": 915
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cel01f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "被告人にこの場で判決を言い渡します。\n",
+      "text": "被告人にこの場で判決を言い渡します。\n",
+      "offset": 1163
+    },
+    {
+      "op": "wait",
+      "frames": 10
+    },
+    {
+      "op": "play_sound",
+      "file": "han_se099"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "han_t02"
+    },
+    {
+      "op": "wait",
+      "frames": 10
+    },
+    {
+      "op": "play_sound",
+      "file": "han_se099"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "han_t05"
+    },
+    {
+      "op": "wait",
+      "frames": 20
+    },
+    {
+      "op": "set_flag",
+      "flag": 3,
+      "value": 0
+    },
+    {
+      "op": "set_flag",
+      "flag": 4,
+      "value": 0
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "wait",
+      "frames": 20
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cel01f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "被告人はこれより、その身柄を司直に\n預けるものとし、\u0007１ヶ月以内に高等裁判所\nにおいて通常裁判を受けることとします。\n",
+      "text": "被告人はこれより、その身柄を司直に\n預けるものとし、\u0007１ヶ月以内に高等裁判所\nにおいて通常裁判を受けることとします。\n",
+      "offset": 1571
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "では、本日はこれにて閉廷！！\n",
+      "text": "では、本日はこれにて閉廷！！\n",
+      "offset": 1799
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "nanako01"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "wait",
+      "frames": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "nanako02"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "nanako03"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "play_sound",
+      "file": "han_se015"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "nanako04"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "wait",
+      "frames": 15
+    },
+    {
+      "op": "play_sound",
+      "file": "han_se088"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_haiso03"
+    },
+    {
+      "op": "jump",
+      "target": 1078
+    }
+  ]
+}

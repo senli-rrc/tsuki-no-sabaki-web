@@ -1,0 +1,3066 @@
+{
+  "script": "mitsuki.scr",
+  "lang": "jp",
+  "events": [
+    {
+      "op": "set_flag",
+      "flag": 13,
+      "value": 0
+    },
+    {
+      "op": "set_flag",
+      "flag": 10,
+      "value": 0
+    },
+    {
+      "op": "set_flag",
+      "flag": 5,
+      "value": 0
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "wait",
+      "frames": 10
+    },
+    {
+      "op": "load_bgm",
+      "file": ""
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_bg04"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cel01"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cel01f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "…………さて。\n",
+      "text": "…………さて。\n",
+      "offset": 395
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "ここへ来て、状況は一変したと\n言っていいでしょう。\n",
+      "text": "ここへ来て、状況は一変したと\n言っていいでしょう。\n",
+      "offset": 523
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "瀬尾検事、久我峰斗波は……？\n",
+      "text": "瀬尾検事、久我峰斗波は……？\n",
+      "offset": 687
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_bg03"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_akr01"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "l_wins"
+    },
+    {
+      "op": "load_image",
+      "name": "han_akr01f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "は、あの……\u0007\n先ほど緊急逮捕……致しました。\n",
+      "text": "は、あの……\u0007\n先ほど緊急逮捕……致しました。\n",
+      "offset": 979
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_bg04"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cel02"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cel02f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "よろしい。\u0007\n………ところで、遠野くん。\n",
+      "text": "よろしい。\u0007\n………ところで、遠野くん。\n",
+      "offset": 1295
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_bg01"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski01"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski01f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "はい。\n",
+      "text": "はい。\n",
+      "offset": 1603
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_bg04"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cel01"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cel01f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "……正直に言って、驚きました。\u0007\nこんなに早く、依頼人を救い出した上――\n",
+      "text": "……正直に言って、驚きました。\u0007\nこんなに早く、依頼人を救い出した上――\n",
+      "offset": 1879
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_bg04"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cel02"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cel02f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "真犯人まで探し出すとは……ね。\n",
+      "text": "真犯人まで探し出すとは……ね。\n",
+      "offset": 2219
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_bg01"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski01"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski01f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "ありがとうございます……。\n",
+      "text": "ありがとうございます……。\n",
+      "offset": 2519
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "han_t01"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cel01f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "とにかく、今となっては形式に\nすぎませんが……\n",
+      "text": "とにかく、今となっては形式に\nすぎませんが……\n",
+      "offset": 2775
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "被告人―――\u0007\nアルクェイド・ブリュンスタッドに\n判決を言い渡します。\n",
+      "text": "被告人―――\u0007\nアルクェイド・ブリュンスタッドに\n判決を言い渡します。\n",
+      "offset": 2935
+    },
+    {
+      "op": "wait",
+      "frames": 15
+    },
+    {
+      "op": "play_sound",
+      "file": "han_se099"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "han_t04"
+    },
+    {
+      "op": "wait",
+      "frames": 10
+    },
+    {
+      "op": "play_sound",
+      "file": "han_se099"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "han_t05"
+    },
+    {
+      "op": "wait",
+      "frames": 10
+    },
+    {
+      "op": "play_sound",
+      "file": "han_se099"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_bg00x"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "play_sound",
+      "file": "han_se098"
+    },
+    {
+      "op": "wait",
+      "frames": 35
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_bg04"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cel01"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cel01f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "では、本日はこれにて閉廷！\n",
+      "text": "では、本日はこれにて閉廷！\n",
+      "offset": 3539
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "nanako01"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "wait",
+      "frames": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "nanako02"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "nanako03"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "play_sound",
+      "file": "han_se015"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "nanako04"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "wait",
+      "frames": 15
+    },
+    {
+      "op": "set_flag",
+      "flag": 13,
+      "value": 0
+    },
+    {
+      "op": "wait",
+      "frames": 20
+    },
+    {
+      "op": "color_fade",
+      "mode": 1,
+      "r": 0,
+      "g": 255,
+      "b": 0,
+      "val": 28674
+    },
+    {
+      "op": "text",
+      "jp": "久我峰斗波は少女買春、\nおよび盗撮の常習犯だったらしい。\n",
+      "text": "久我峰斗波は少女買春、\nおよび盗撮の常習犯だったらしい。\n",
+      "offset": 3945
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "今回の被害者、弓塚さつきに対しても\n何度となく盗撮を繰り返し、それをネタにして関係を\n迫ろうとしていたと自供した。\n",
+      "text": "今回の被害者、弓塚さつきに対しても\n何度となく盗撮を繰り返し、それをネタにして関係を\n迫ろうとしていたと自供した。\n",
+      "offset": 4117
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "あの日、部活動を終えた被害者は一通の封書を\n自分のロッカーから発見―――\n封筒の中身は自分を写された盗撮写真と脅迫文だった。\n",
+      "text": "あの日、部活動を終えた被害者は一通の封書を\n自分のロッカーから発見―――\n封筒の中身は自分を写された盗撮写真と脅迫文だった。\n",
+      "offset": 4345
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "今となっては推測の域を出ないが――\u0007\n被害者は脅迫のことを思い悩んだ末、職員室に\n相談に向かったのだと思う。\n",
+      "text": "今となっては推測の域を出ないが――\u0007\n被害者は脅迫のことを思い悩んだ末、職員室に\n相談に向かったのだと思う。\n",
+      "offset": 4581
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "だが―――\u0007そこにいたのは不運にも\n盗撮と脅迫の張本人の久我峰だった。\n",
+      "text": "だが―――\u0007そこにいたのは不運にも\n盗撮と脅迫の張本人の久我峰だった。\n",
+      "offset": 4801
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "久我峰の供述によれば、その場で関係を迫ろうとして\n抵抗に遭い―――\u0007思わず近くにあった花瓶で後頭部を\n殴ったということだ。\n",
+      "text": "久我峰の供述によれば、その場で関係を迫ろうとして\n抵抗に遭い―――\u0007思わず近くにあった花瓶で後頭部を\n殴ったということだ。\n",
+      "offset": 4985
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "その時点で被害者は意識があったのだという。\n",
+      "text": "その時点で被害者は意識があったのだという。\n",
+      "offset": 5221
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "証拠隠滅をどうしようかと悩んでいた久我峰は\n何気なく窓から外を眺め、アルクェイドが昇降口を\n上がってくるのを目撃。\n",
+      "text": "証拠隠滅をどうしようかと悩んでいた久我峰は\n何気なく窓から外を眺め、アルクェイドが昇降口を\n上がってくるのを目撃。\n",
+      "offset": 5377
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "アルクェイドに濡れ衣を着せる計画を\n思いついたということだった。\n",
+      "text": "アルクェイドに濡れ衣を着せる計画を\n思いついたということだった。\n",
+      "offset": 5605
+    },
+    {
+      "op": "wait",
+      "frames": 20
+    },
+    {
+      "op": "color_fade",
+      "mode": 1,
+      "r": 0,
+      "g": 255,
+      "b": 0,
+      "val": 28674
+    },
+    {
+      "op": "text",
+      "jp": "　\n　　　　　　!s８月３日　午後２時３２分\n　 　　　　地方裁判所　被告人第２控え室\n",
+      "text": "　\n　　　　　　!s８月３日　午後２時３２分\n　 　　　　地方裁判所　被告人第２控え室\n",
+      "offset": 5803
+    },
+    {
+      "op": "wait",
+      "frames": 20
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_bg06"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "wait",
+      "frames": 10
+    },
+    {
+      "op": "load_bgm",
+      "file": ""
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "mind"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski03f"
+    },
+    {
+      "op": "color_fade",
+      "mode": 1,
+      "r": 100,
+      "g": 160,
+      "b": 240,
+      "val": 28674
+    },
+    {
+      "op": "text",
+      "jp": "（……うう、無事に終わったなんて\n　まだ信じられないよ……）\n",
+      "text": "（……うう、無事に終わったなんて\n　まだ信じられないよ……）\n",
+      "offset": 6185
+    },
+    {
+      "op": "wait",
+      "frames": 10
+    },
+    {
+      "op": "set_flag",
+      "flag": 10,
+      "value": 0
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_khk01"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_khk01f"
+    },
+    {
+      "op": "color_fade",
+      "mode": 1,
+      "r": 255,
+      "g": 255,
+      "b": 255,
+      "val": 28674
+    },
+    {
+      "op": "text",
+      "jp": "志貴さん、やりましたねっ！\u0007\nおめでとうございます！\n",
+      "text": "志貴さん、やりましたねっ！\u0007\nおめでとうございます！\n",
+      "offset": 6515
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski01f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "あ、ありがとうございます！\u0007\n……ホント、所長のおかげです。\n",
+      "text": "あ、ありがとうございます！\u0007\n……ホント、所長のおかげです。\n",
+      "offset": 6715
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_khk01f"
+    },
+    {
+      "op": "color_fade",
+      "mode": 1,
+      "r": 255,
+      "g": 255,
+      "b": 255,
+      "val": 28674
+    },
+    {
+      "op": "text",
+      "jp": "ううん、そんなことありませんよ。\u0007\n志貴さんのツッコミがもたらした\n勝訴ですよ。\n",
+      "text": "ううん、そんなことありませんよ。\u0007\n志貴さんのツッコミがもたらした\n勝訴ですよ。\n",
+      "offset": 6965
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "とにかく、久しぶりにスカッとした\n裁判でした〜♪\n",
+      "text": "とにかく、久しぶりにスカッとした\n裁判でした〜♪\n",
+      "offset": 7157
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "mind"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski01f"
+    },
+    {
+      "op": "color_fade",
+      "mode": 1,
+      "r": 100,
+      "g": 160,
+      "b": 240,
+      "val": 28674
+    },
+    {
+      "op": "text",
+      "jp": "（自分のコトのように喜んでくれてる。\u0007\n　……ありがとう、琥珀さん）\n",
+      "text": "（自分のコトのように喜んでくれてる。\u0007\n　……ありがとう、琥珀さん）\n",
+      "offset": 7439
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski03f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "（そうだ！\u0007　アルクェイドのヤツも\n　喜んでるだろうな……）\n",
+      "text": "（そうだ！\u0007　アルクェイドのヤツも\n　喜んでるだろうな……）\n",
+      "offset": 7691
+    },
+    {
+      "op": "wait",
+      "frames": 10
+    },
+    {
+      "op": "set_flag",
+      "flag": 13,
+      "value": 0
+    },
+    {
+      "op": "set_flag",
+      "flag": 10,
+      "value": 0
+    },
+    {
+      "op": "set_flag",
+      "flag": 5,
+      "value": 0
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc09"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc14f"
+    },
+    {
+      "op": "color_fade",
+      "mode": 1,
+      "r": 255,
+      "g": 100,
+      "b": 200,
+      "val": 28674
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski04f"
+    },
+    {
+      "op": "color_fade",
+      "mode": 1,
+      "r": 255,
+      "g": 255,
+      "b": 255,
+      "val": 28674
+    },
+    {
+      "op": "text",
+      "jp": "お、おい、いきなり抱きついてくるな！\nヒトが見てるってば！！\n",
+      "text": "お、おい、いきなり抱きついてくるな！\nヒトが見てるってば！！\n",
+      "offset": 8239
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc14f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "志貴ぃ……\u0007\n本当にありがとう。\n",
+      "text": "志貴ぃ……\u0007\n本当にありがとう。\n",
+      "offset": 8487
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski04f"
+    },
+    {
+      "op": "color_fade",
+      "mode": 1,
+      "r": 255,
+      "g": 255,
+      "b": 255,
+      "val": 28674
+    },
+    {
+      "op": "text",
+      "jp": "い、いや、その……。\n",
+      "text": "い、いや、その……。\n",
+      "offset": 8709
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "mind"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski13f"
+    },
+    {
+      "op": "color_fade",
+      "mode": 1,
+      "r": 100,
+      "g": 160,
+      "b": 240,
+      "val": 28674
+    },
+    {
+      "op": "text",
+      "jp": "（……あ！　ムネの感触がぁぁ……）\n",
+      "text": "（……あ！　ムネの感触がぁぁ……）\n",
+      "offset": 8927
+    },
+    {
+      "op": "wait",
+      "frames": 10
+    },
+    {
+      "op": "set_flag",
+      "flag": 10,
+      "value": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc08"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc16f"
+    },
+    {
+      "op": "color_fade",
+      "mode": 1,
+      "r": 255,
+      "g": 255,
+      "b": 255,
+      "val": 28674
+    },
+    {
+      "op": "text",
+      "jp": "すっごく格好よかったよ、志貴！\u0007\nなんか弁護士〜ってカンジだった♪\n",
+      "text": "すっごく格好よかったよ、志貴！\u0007\nなんか弁護士〜ってカンジだった♪\n",
+      "offset": 9213
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "mind"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski09f"
+    },
+    {
+      "op": "color_fade",
+      "mode": 1,
+      "r": 100,
+      "g": 160,
+      "b": 240,
+      "val": 28674
+    },
+    {
+      "op": "text",
+      "jp": "（いや、正真正銘の弁護士なんだけど…）\n",
+      "text": "（いや、正真正銘の弁護士なんだけど…）\n",
+      "offset": 9475
+    },
+    {
+      "op": "wait",
+      "frames": 10
+    },
+    {
+      "op": "set_flag",
+      "flag": 10,
+      "value": 0
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_khk01"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_khk01f"
+    },
+    {
+      "op": "color_fade",
+      "mode": 1,
+      "r": 255,
+      "g": 255,
+      "b": 255,
+      "val": 28674
+    },
+    {
+      "op": "text",
+      "jp": "あらあら、お熱いですね。\n",
+      "text": "あらあら、お熱いですね。\n",
+      "offset": 9781
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski04f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "しょ、所長！\n",
+      "text": "しょ、所長！\n",
+      "offset": 9993
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_khk01f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "おめでとうございます！\nアルクェイドさん！\n",
+      "text": "おめでとうございます！\nアルクェイドさん！\n",
+      "offset": 10193
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc03"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc05f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "うん、どうもありがとー☆\n",
+      "text": "うん、どうもありがとー☆\n",
+      "offset": 10469
+    },
+    {
+      "op": "wait",
+      "frames": 10
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc02"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc02f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "ねぇ、志貴ぃ。\u0007\nひとつ訊いていいかな？\n",
+      "text": "ねぇ、志貴ぃ。\u0007\nひとつ訊いていいかな？\n",
+      "offset": 10741
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski01f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "………ん？\n",
+      "text": "………ん？\n",
+      "offset": 10965
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc02"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc02f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "……どうやって無実を証明したの？\n",
+      "text": "……どうやって無実を証明したの？\n",
+      "offset": 11209
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski03f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "ああ―――\u0007\nある意味、お前のおかげかな……。\n",
+      "text": "ああ―――\u0007\nある意味、お前のおかげかな……。\n",
+      "offset": 11429
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc02f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "……私の？\n",
+      "text": "……私の？\n",
+      "offset": 11661
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski02f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "お前がくれた<証拠品>がお前の無実を\n証明する切り札になったんだ。\n",
+      "text": "お前がくれた<証拠品>がお前の無実を\n証明する切り札になったんだ。\n",
+      "offset": 11857
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc02"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc02f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "……へぇ、そうなんだ。\n",
+      "text": "……へぇ、そうなんだ。\n",
+      "offset": 12157
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "l_wins"
+    },
+    {
+      "op": "load_image",
+      "name": "han_khk02f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "……志貴さん。\u0007\n切り札の証拠品を見せてあげたら？\n",
+      "text": "……志貴さん。\u0007\n切り札の証拠品を見せてあげたら？\n",
+      "offset": 12357
+    },
+    {
+      "op": "set_flag",
+      "flag": 13,
+      "value": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_bg06"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc02"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "play_sound",
+      "file": "han_se004"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "han_m12"
+    },
+    {
+      "op": "wait",
+      "frames": 15
+    },
+    {
+      "op": "set_flag",
+      "flag": 10,
+      "value": 0
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_khk01f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "ちょ、ちょっと、志貴さんっ！\nソレじゃないでしょう？\n",
+      "text": "ちょ、ちょっと、志貴さんっ！\nソレじゃないでしょう？\n",
+      "offset": 13137
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski04f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "え！？\n",
+      "text": "え！？\n",
+      "offset": 13377
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_khk01f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "もっと、ほら……\u0007アルクェイドさんと\n志貴さんの二人の仲を象徴した―――\n",
+      "text": "もっと、ほら……\u0007アルクェイドさんと\n志貴さんの二人の仲を象徴した―――\n",
+      "offset": 13569
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski03f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "あ、ああ……。\u0007\nそ、そうですね、はは……\n",
+      "text": "あ、ああ……。\u0007\nそ、そうですね、はは……\n",
+      "offset": 13825
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_khk01f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "ふふ。\u0007\nじゃあ、もう１度―――\n",
+      "text": "ふふ。\u0007\nじゃあ、もう１度―――\n",
+      "offset": 14053
+    },
+    {
+      "op": "set_flag",
+      "flag": 13,
+      "value": 0
+    },
+    {
+      "op": "set_flag",
+      "flag": 10,
+      "value": 0
+    },
+    {
+      "op": "set_flag",
+      "flag": 13,
+      "value": 0
+    },
+    {
+      "op": "play_sound",
+      "file": "han_se004"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_bg06"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc01"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "han_m12"
+    },
+    {
+      "op": "wait",
+      "frames": 15
+    },
+    {
+      "op": "set_flag",
+      "flag": 10,
+      "value": 0
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski02f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "このレシートでお前のアリバイを\n証明できたんだよ。\n",
+      "text": "このレシートでお前のアリバイを\n証明できたんだよ。\n",
+      "offset": 14485
+    },
+    {
+      "op": "play_sound",
+      "file": "han_se019"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_item105"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "wait",
+      "frames": 10
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc09"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc21f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "…………………。\n",
+      "text": "…………………。\n",
+      "offset": 14849
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski04f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "……ど、どうして泣くんだよ。\n",
+      "text": "……ど、どうして泣くんだよ。\n",
+      "offset": 15053
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc21f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "……えっと、その。\u0007\nレシート見たら、ラーメンのこと\n思い出しちゃって……。\n",
+      "text": "……えっと、その。\u0007\nレシート見たら、ラーメンのこと\n思い出しちゃって……。\n",
+      "offset": 15269
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "mind"
+    },
+    {
+      "op": "play_sound",
+      "file": "han_se007"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski04f"
+    },
+    {
+      "op": "color_fade",
+      "mode": 1,
+      "r": 100,
+      "g": 160,
+      "b": 240,
+      "val": 1055
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "（……あ、あんですとーっ！？）\n",
+      "text": "（……あ、あんですとーっ！？）\n",
+      "offset": 15607
+    },
+    {
+      "op": "set_flag",
+      "flag": 10,
+      "value": 0
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_khk01"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_khk01f"
+    },
+    {
+      "op": "color_fade",
+      "mode": 1,
+      "r": 255,
+      "g": 255,
+      "b": 255,
+      "val": 28674
+    },
+    {
+      "op": "text",
+      "jp": "……そういえばお腹、空きましたね。\n",
+      "text": "……そういえばお腹、空きましたね。\n",
+      "offset": 15893
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc06f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "うんうん！！\n",
+      "text": "うんうん！！\n",
+      "offset": 16113
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski01f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "じゃあ、せっかくだし\nラーメンでも食べに行こうか。\n",
+      "text": "じゃあ、せっかくだし\nラーメンでも食べに行こうか。\n",
+      "offset": 16313
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "手作りじゃなくて悪いけど。\nな、そうしようアルクェイド。\n",
+      "text": "手作りじゃなくて悪いけど。\nな、そうしようアルクェイド。\n",
+      "offset": 16477
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc03f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "うん……。\u0007\nあ、でも、にんにくはやめて〜！\n",
+      "text": "うん……。\u0007\nあ、でも、にんにくはやめて〜！\n",
+      "offset": 16721
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski02f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "……はいはい。\n",
+      "text": "……はいはい。\n",
+      "offset": 16949
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_khk01f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "あ、それじゃあいい店を知ってますから。\u0007\n勝訴のお祝いに行きましょうか！\n",
+      "text": "あ、それじゃあいい店を知ってますから。\u0007\n勝訴のお祝いに行きましょうか！\n",
+      "offset": 17149
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski03f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "いいですね！\u0007\n……ところでどんな店なんですか？\n",
+      "text": "いいですね！\u0007\n……ところでどんな店なんですか？\n",
+      "offset": 17405
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_khk01f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "天下一品ラーメンっていう店ですよ。\u0007\n背脂をふんだんに使ったチャッチャ系の\n老舗で―――\n",
+      "text": "天下一品ラーメンっていう店ですよ。\u0007\n背脂をふんだんに使ったチャッチャ系の\n老舗で―――\n",
+      "offset": 17637
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "とろ火で長時間加熱してスープの透明度\nを上げるという清湯（チンタン）という\n手法で有名なお店です。\n",
+      "text": "とろ火で長時間加熱してスープの透明度\nを上げるという清湯（チンタン）という\n手法で有名なお店です。\n",
+      "offset": 17837
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski04f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "な、なんかよく分からないけど……\u0007\nす、スゴそうですね。\n",
+      "text": "な、なんかよく分からないけど……\u0007\nす、スゴそうですね。\n",
+      "offset": 18121
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_khk01f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "ふふ。私と翡翠ちゃんのいきつけの\nラーメン屋さんなんですよ。\n",
+      "text": "ふふ。私と翡翠ちゃんのいきつけの\nラーメン屋さんなんですよ。\n",
+      "offset": 18361
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski03f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "………えっ！　翡翠…の？\n",
+      "text": "………えっ！　翡翠…の？\n",
+      "offset": 18609
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_khk01f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "あ、大丈夫ですよ！\n美味しいお店ですから！\n",
+      "text": "あ、大丈夫ですよ！\n美味しいお店ですから！\n",
+      "offset": 18821
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc09"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc21f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "う〜、う〜、う〜〜〜\n",
+      "text": "う〜、う〜、う〜〜〜\n",
+      "offset": 19097
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski04f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "な、なに唸ってるんだよ？\n",
+      "text": "な、なに唸ってるんだよ？\n",
+      "offset": 19305
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_arc21f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "は、早く、ラーメン屋に……。\u0007\nお、お腹が空いて……\u0007死に……そう……。\n",
+      "text": "は、早く、ラーメン屋に……。\u0007\nお、お腹が空いて……\u0007死に……そう……。\n",
+      "offset": 19517
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "textwins"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski04f"
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "わ、わかったから、ホラ……。\n",
+      "text": "わ、わかったから、ホラ……。\n",
+      "offset": 19773
+    },
+    {
+      "op": "wait",
+      "frames": 20
+    },
+    {
+      "op": "set_flag",
+      "flag": 10,
+      "value": 0
+    },
+    {
+      "op": "set_flag",
+      "flag": 5,
+      "value": 0
+    },
+    {
+      "op": "set_flag",
+      "flag": 0,
+      "value": 0
+    },
+    {
+      "op": "set_flag",
+      "flag": 13,
+      "value": 0
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "……こうして、俺の最初の仕事は幕を閉じた。\n",
+      "text": "……こうして、俺の最初の仕事は幕を閉じた。\n",
+      "offset": 19969
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "アルクェイドのヤツ\n“志貴は頼りになるわ”を連呼しつつも―――\n\n",
+      "text": "アルクェイドのヤツ\n“志貴は頼りになるわ”を連呼しつつも―――\n\n",
+      "offset": 20125
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "報酬は払う気はないようだった。\u0007\n夜の営み以外では……。\n",
+      "text": "報酬は払う気はないようだった。\u0007\n夜の営み以外では……。\n",
+      "offset": 20301
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "mind"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_ski13f"
+    },
+    {
+      "op": "color_fade",
+      "mode": 1,
+      "r": 100,
+      "g": 160,
+      "b": 240,
+      "val": 28674
+    },
+    {
+      "op": "text",
+      "jp": "（ま、それはそれで……）\n",
+      "text": "（ま、それはそれで……）\n",
+      "offset": 20551
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "（嬉しい報酬なんだけどね……）\n",
+      "text": "（嬉しい報酬なんだけどね……）\n",
+      "offset": 20691
+    },
+    {
+      "op": "wait",
+      "frames": 10
+    },
+    {
+      "op": "color_fade",
+      "mode": 1,
+      "r": 255,
+      "g": 0,
+      "b": 0,
+      "val": 853009
+    },
+    {
+      "op": "wait_click"
+    },
+    {
+      "op": "text",
+      "jp": "１８禁じゃないので\nこれ以上は描写できません。\n",
+      "text": "１８禁じゃないので\nこれ以上は描写できません。\n",
+      "offset": 20853
+    },
+    {
+      "op": "wait",
+      "frames": 15
+    },
+    {
+      "op": "color_fade",
+      "mode": 1,
+      "r": 255,
+      "g": 255,
+      "b": 255,
+      "val": 1041
+    },
+    {
+      "op": "wait",
+      "frames": 20
+    },
+    {
+      "op": "play_sound",
+      "file": "han_se55"
+    },
+    {
+      "op": "text",
+      "jp": "�\u0000",
+      "text": "�\u0000",
+      "offset": 21031
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "text",
+      "jp": "�\u0001",
+      "text": "�\u0001",
+      "offset": 21391
+    },
+    {
+      "op": "text",
+      "jp": "�\u0001",
+      "text": "�\u0001",
+      "offset": 21415
+    },
+    {
+      "op": "text",
+      "jp": "�\u0001",
+      "text": "�\u0001",
+      "offset": 21439
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cha_ski"
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cha_khk"
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cha_stk"
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cha_arc"
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cha_cel"
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cha_sev"
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cha_akr"
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "text",
+      "jp": "弖",
+      "text": "弖",
+      "offset": 22115
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cha_ahk"
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "text",
+      "jp": "鏃",
+      "text": "鏃",
+      "offset": 22191
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cha_kgm"
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_cha_akh"
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_item"
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "text",
+      "jp": "�\u0001",
+      "text": "�\u0001",
+      "offset": 22955
+    },
+    {
+      "op": "text",
+      "jp": "�\u0001",
+      "text": "�\u0001",
+      "offset": 22979
+    },
+    {
+      "op": "text",
+      "jp": "�\u0001",
+      "text": "�\u0001",
+      "offset": 23003
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "text",
+      "jp": "彖",
+      "text": "彖",
+      "offset": 24375
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "text",
+      "jp": "慶",
+      "text": "慶",
+      "offset": 25127
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_map01e"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_map01x"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_map01q"
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "han_e18"
+    },
+    {
+      "op": "text",
+      "jp": "徑",
+      "text": "徑",
+      "offset": 27447
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 80,
+      "flag": 0
+    },
+    {
+      "op": "text",
+      "jp": "б",
+      "text": "б",
+      "offset": 29047
+    },
+    {
+      "op": "text",
+      "jp": "�\u0003",
+      "text": "�\u0003",
+      "offset": 29355
+    }
+  ]
+}

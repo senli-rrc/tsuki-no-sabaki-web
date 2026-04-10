@@ -1,0 +1,116 @@
+{
+  "script": "main.scr",
+  "lang": "jp",
+  "events": [
+    {
+      "op": "choice_begin"
+    },
+    {
+      "op": "set_flag",
+      "flag": 5,
+      "value": 0
+    },
+    {
+      "op": "set_flag",
+      "flag": 13,
+      "value": 0
+    },
+    {
+      "op": "set_flag",
+      "flag": 0,
+      "value": 0
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "fade",
+      "duration": 0,
+      "flag": 83886096
+    },
+    {
+      "op": "choice_begin"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "logo"
+    },
+    {
+      "op": "wait",
+      "frames": 35
+    },
+    {
+      "op": "play_bgm",
+      "val": 268828702
+    },
+    {
+      "op": "text",
+      "jp": "�\u0002",
+      "text": "�\u0002",
+      "offset": 613
+    },
+    {
+      "op": "play_bgm",
+      "val": 268828702
+    },
+    {
+      "op": "text",
+      "jp": "�\u0002",
+      "text": "�\u0002",
+      "offset": 635
+    },
+    {
+      "op": "play_bgm",
+      "val": 268828702
+    },
+    {
+      "op": "text",
+      "jp": "�\u0002",
+      "text": "�\u0002",
+      "offset": 657
+    },
+    {
+      "op": "play_bgm",
+      "val": 268828702
+    },
+    {
+      "op": "text",
+      "jp": "�\u0002",
+      "text": "�\u0002",
+      "offset": 679
+    },
+    {
+      "op": "play_bgm",
+      "val": 268828702
+    },
+    {
+      "op": "text",
+      "jp": "�\u0002",
+      "text": "�\u0002",
+      "offset": 701
+    },
+    {
+      "op": "play_bgm",
+      "val": 268828702
+    },
+    {
+      "op": "text",
+      "jp": "�\u0002",
+      "text": "�\u0002",
+      "offset": 723
+    },
+    {
+      "op": "play_sound",
+      "file": "han_se021"
+    },
+    {
+      "op": "choice_begin"
+    }
+  ]
+}

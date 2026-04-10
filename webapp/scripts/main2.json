@@ -1,0 +1,392 @@
+{
+  "script": "main2.scr",
+  "lang": "jp",
+  "events": [
+    {
+      "op": "choice_begin"
+    },
+    {
+      "op": "set_flag",
+      "flag": 13,
+      "value": 0
+    },
+    {
+      "op": "set_flag",
+      "flag": 0,
+      "value": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 31,
+      "flag": 0
+    },
+    {
+      "op": "text",
+      "jp": "�\u0001",
+      "text": "�\u0001",
+      "offset": 183
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 31,
+      "flag": 0
+    },
+    {
+      "op": "text",
+      "jp": "�\u0001",
+      "text": "�\u0001",
+      "offset": 487
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_t_02a"
+    },
+    {
+      "op": "fade",
+      "duration": 31,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_t_02b"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 31,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 31,
+      "flag": 0
+    },
+    {
+      "op": "text",
+      "jp": "�\u0001",
+      "text": "�\u0001",
+      "offset": 2139
+    },
+    {
+      "op": "text",
+      "jp": "�\u0001",
+      "text": "�\u0001",
+      "offset": 2163
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "han_e02"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "han_e01"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_e12a"
+    },
+    {
+      "op": "fade",
+      "duration": 31,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_e12b"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "han_e18"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_e18a"
+    },
+    {
+      "op": "fade",
+      "duration": 31,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_e18b"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_e20_02"
+    },
+    {
+      "op": "fade",
+      "duration": 31,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "han_e20"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "han_e23"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_e23a"
+    },
+    {
+      "op": "fade",
+      "duration": 31,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_e23b"
+    },
+    {
+      "op": "fade",
+      "duration": 1000,
+      "flag": 1
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "han_e24"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_e25_02"
+    },
+    {
+      "op": "fade",
+      "duration": 31,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "han_e25"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "han_e26"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_ui",
+      "name": "han_e31"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_e29a"
+    },
+    {
+      "op": "fade",
+      "duration": 31,
+      "flag": 0
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "load_image",
+      "name": "han_e29b"
+    },
+    {
+      "op": "set_layer",
+      "layer": 0
+    },
+    {
+      "op": "fade",
+      "duration": 31,
+      "flag": 0
+    },
+    {
+      "op": "text",
+      "jp": "�\u0000",
+      "text": "�\u0000",
+      "offset": 4043
+    },
+    {
+      "op": "text",
+      "jp": "�\u0000",
+      "text": "�\u0000",
+      "offset": 4139
+    },
+    {
+      "op": "text",
+      "jp": "�\u0001",
+      "text": "�\u0001",
+      "offset": 4307
+    },
+    {
+      "op": "text",
+      "jp": "�\u0001",
+      "text": "�\u0001",
+      "offset": 4323
+    },
+    {
+      "op": "text",
+      "jp": "�\u0001",
+      "text": "�\u0001",
+      "offset": 4347
+    },
+    {
+      "op": "load_bgm",
+      "file": ""
+    },
+    {
+      "op": "load_bgm",
+      "file": ""
+    },
+    {
+      "op": "load_bgm",
+      "file": ""
+    },
+    {
+      "op": "load_bgm",
+      "file": ""
+    },
+    {
+      "op": "load_bgm",
+      "file": ""
+    },
+    {
+      "op": "load_bgm",
+      "file": ""
+    },
+    {
+      "op": "load_bgm",
+      "file": ""
+    },
+    {
+      "op": "load_bgm",
+      "file": ""
+    },
+    {
+      "op": "load_bgm",
+      "file": ""
+    },
+    {
+      "op": "load_bgm",
+      "file": ""
+    },
+    {
+      "op": "load_bgm",
+      "file": ""
+    },
+    {
+      "op": "load_bgm",
+      "file": ""
+    },
+    {
+      "op": "load_bgm",
+      "file": ""
+    },
+    {
+      "op": "text",
+      "jp": "�\u0013",
+      "text": "�\u0013",
+      "offset": 4975
+    },
+    {
+      "op": "load_bgm",
+      "file": ""
+    },
+    {
+      "op": "load_bgm",
+      "file": ""
+    }
+  ]
+}

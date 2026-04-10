@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>月ノ裁 / Tsuki no Sabaki</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+    }
+
+    /* ── Shared screen size ───────────────────────── */
+    .screen {
+      position: relative;
+      width: 640px;
+      height: 480px;
+      overflow: hidden;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    /* ── Main menu ────────────────────────────────── */
+    #menu-screen { cursor: default; }
+    #menu-screen .bg {
+      position: absolute; top:0; left:0; width:640px; height:480px;
+    }
+    .menu-hotspot {
+      position: absolute;
+      cursor: pointer;
+    }
+    .menu-hotspot:hover { filter: brightness(1.35); }
+
+    /* ── Chapter select ───────────────────────────── */
+    #chapter-screen { display: none; cursor: default; }
+    #chapter-screen .bg {
+      position: absolute; top:0; left:0; width:640px; height:480px;
+    }
+    .ch-hotspot {
+      position: absolute;
+      cursor: pointer;
+    }
+    .ch-hotspot:hover { filter: brightness(1.3); }
+
+    /* ── Game container ───────────────────────────── */
+    #game-container {
+      display: none;
+      cursor: pointer;
+      background: #000;
+    }
+
+    /* Canvas layers */
+    #bg-canvas, #sprite-canvas {
+      position: absolute; top: 0; left: 0;
+      width: 640px; height: 480px;
+    }
+    #bg-canvas     { z-index: 1; }
+    #sprite-canvas { z-index: 2; }
+
+    /* ── Dialogue box ─────────────────────────────── */
+    /*
+      All rendering (portrait + frame) done on #textbox-canvas via JS compositing.
+      Frame mask makes it semi-transparent. Portrait mask removes black background.
+
+      Layout in the 640×150 canvas:
+        x: 0──────────170: portrait (composited with mask → transparent bg)
+        x: 170─────────640: frame textwins.jpg (composited with mask → semi-transparent)
+    */
+    #textbox {
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 640px; height: 150px;
+      z-index: 5;
+      display: none;
+    }
+
+    /* Canvas that holds composited portrait + frame */
+    #textbox-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 640px; height: 150px;
+    }
+
+    /* Text rendered on top of the canvas */
+    #dialogue-area {
+      position: absolute;
+      left: 188px; right: 18px;
+      top: 16px; bottom: 14px;
+      z-index: 6;
+    }
+    #dialogue-text {
+      font-size: 15px;
+      line-height: 1.75;
+      color: #e8eeff;
+      white-space: pre-wrap;
+    }
+    #click-indicator {
+      position: absolute;
+      bottom: 0; right: 2px;
+      color: #c8a840;
+      font-size: 13px;
+      animation: blink 0.85s infinite;
+      display: none;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* ── Fade overlay ─────────────────────────────── */
+    #fade-overlay {
+      position: absolute; inset: 0;
+      background: #000; opacity: 0;
+      z-index: 10; pointer-events: none;
+    }
+
+    /* ── Choice menu ──────────────────────────────── */
+    #choice-menu {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 20;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 300px;
+    }
+    .choice-btn {
+      background: rgba(0,5,30,0.88);
+      border: 1px solid #446;
+      color: #cce;
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: 3px;
+      text-align: center;
+    }
+    .choice-btn:hover { background: rgba(30,40,100,0.95); }
+
+    /* ── Controls ─────────────────────────────────── */
+    #controls {
+      display: none;
+      margin-top: 6px;
+      gap: 8px;
+      align-items: center;
+    }
+    #controls label { color: #445; font-size: 12px; }
+    #controls select, #controls button {
+      background: #12121e; color: #8899cc;
+      border: 1px solid #223;
+      padding: 3px 8px; border-radius: 3px;
+      cursor: pointer; font-size: 12px;
+    }
+    #controls button:hover { background: #1e1e40; }
+    #status {
+      display: none;
+      color: #334; font-size: 10px;
+      margin-top: 3px; text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════
+     MAIN MENU
+     Buttons (estimated from han_t_02_off.jpg 640×480):
+       Start  ≈ x:432-614, y:207-247
+       Load   ≈ x:432-614, y:257-297
+       Option ≈ x:432-614, y:308-348
+       Exit   ≈ x:432-614, y:358-398
+═════════════════════════════════════════════════ -->
+<div id="menu-screen" class="screen">
+  <img class="bg" src="assets/ui/han_t_02_off.jpg" alt="Main Menu">
+  <div class="menu-hotspot" id="menu-start"  style="left:425px;top:268px;width:195px;height:48px;"></div>
+  <div class="menu-hotspot" id="menu-load"   style="left:425px;top:320px;width:195px;height:45px;"></div>
+  <div class="menu-hotspot" id="menu-option" style="left:425px;top:368px;width:195px;height:45px;"></div>
+  <div class="menu-hotspot" id="menu-exit"   style="left:425px;top:416px;width:195px;height:45px;"></div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     CHAPTER SELECT
+     Buttons (from han_t_start01.jpg 640×480):
+       Ch1 "はじめての反転"    ≈ y:125-183
+       Ch2 "反転姉妹"           ≈ y:205-263
+       Ch3 "反転、そしてサヨナラ" ≈ y:285-343
+       Back "戻る"              ≈ y:362-420
+═════════════════════════════════════════════════ -->
+<div id="chapter-screen" class="screen">
+  <img class="bg" src="assets/ui/han_t_start00.jpg" alt="">
+  <img class="bg" src="assets/ui/han_t_start01.jpg" alt="">
+  <div class="ch-hotspot" id="ch-1"    style="left:30px;top:35px; width:580px;height:112px;"></div>
+  <div class="ch-hotspot" id="ch-2"    style="left:30px;top:153px;width:580px;height:102px;"></div>
+  <div class="ch-hotspot" id="ch-3"    style="left:30px;top:261px;width:580px;height:105px;"></div>
+  <div class="ch-hotspot" id="ch-back" style="left:30px;top:371px;width:580px;height:72px;"></div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     GAME CONTAINER
+═════════════════════════════════════════════════ -->
+<div id="game-container" class="screen">
+  <canvas id="bg-canvas"     width="640" height="480"></canvas>
+  <canvas id="sprite-canvas" width="640" height="480"></canvas>
+  <!-- Portrait canvas sits above sprites but below the textbox frame;
+       200px tall so the head pokes above the 150px frame -->
+  <canvas id="portrait-canvas" width="165" height="200"
+          style="position:absolute;left:0;bottom:0;z-index:4;pointer-events:none;
+                 width:165px;height:200px;"></canvas>
+
+  <div id="textbox">
+    <canvas id="textbox-canvas" width="640" height="150"></canvas>
+    <div id="dialogue-area">
+      <div id="dialogue-text"></div>
+      <div id="click-indicator">▼</div>
+    </div>
+  </div>
+
+  <div id="fade-overlay"></div>
+  <div id="choice-menu"></div>
+</div>
+
+<!-- ── Dev controls (shown while game is running) ── -->
+<div id="controls">
+  <label>Script:</label>
+  <select id="script-select"></select>
+  <label>Language:</label>
+  <select id="lang-select">
+    <option value="jp">日本語</option>
+    <option value="en">English</option>
+    <option value="cn">中文</option>
+  </select>
+  <button onclick="VN.restart()">▶ Play</button>
+  <button onclick="VN.skip()">⏭ Skip</button>
+  <button onclick="VN.backToMenu()">🏠 Menu</button>
+</div>
+<div id="status"></div>
+
+<script src="engine/engine.js"></script>
+<script>
+  // ── Populate script selector ──────────────────────
+  const scripts = [
+    's02_01','s02_02','s02_03','s02_04','s02_05','s02_06',
+    's02_07','s02_08','s02_09','s02_10','s02_11',
+    's02_20','s02_21','s02_22','s02_23','s02_24','s02_25','s02_26','s02_27',
+    's03_01','s03_02','s03_03','s03_04','s03_05','s03_06',
+    'akane','ciel','haruka','karen','mitsuki','sakuya','gameover',
+  ];
+  const scriptSel = document.getElementById('script-select');
+  scripts.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    scriptSel.appendChild(o);
+  });
+  scriptSel.value = 's02_01';
+
+  // ── Screen elements ───────────────────────────────
+  const menuScreen    = document.getElementById('menu-screen');
+  const chapterScreen = document.getElementById('chapter-screen');
+  const gameContainer = document.getElementById('game-container');
+  const controls      = document.getElementById('controls');
+  const statusBar     = document.getElementById('status');
+
+  function showMenu() {
+    menuScreen.style.display    = 'block';
+    chapterScreen.style.display = 'none';
+    gameContainer.style.display = 'none';
+    controls.style.display      = 'none';
+    statusBar.style.display     = 'none';
+  }
+  function showChapterSelect() {
+    menuScreen.style.display    = 'none';
+    chapterScreen.style.display = 'block';
+    gameContainer.style.display = 'none';
+    controls.style.display      = 'none';
+    statusBar.style.display     = 'none';
+  }
+  function startGame(scriptName) {
+    menuScreen.style.display    = 'none';
+    chapterScreen.style.display = 'none';
+    gameContainer.style.display = 'block';
+    controls.style.display      = 'flex';
+    statusBar.style.display     = 'block';
+    scriptSel.value = scriptName;
+    VN.restart();
+  }
+
+  // ── Menu button wiring ────────────────────────────
+  document.getElementById('menu-start').onclick  = showChapterSelect;
+  document.getElementById('menu-load').onclick   = () => {};  // TODO: save/load
+  document.getElementById('menu-option').onclick = () => {};  // TODO: options
+  document.getElementById('menu-exit').onclick   = () => window.close();
+
+  // ── Chapter select wiring ─────────────────────────
+  document.getElementById('ch-1').onclick    = () => startGame('s02_01');
+  document.getElementById('ch-2').onclick    = () => startGame('s02_20');
+  document.getElementById('ch-3').onclick    = () => startGame('s03_01');
+  document.getElementById('ch-back').onclick = showMenu;
+
+  // ── Global back-to-menu hook for engine ──────────
+  window._showMenu = showMenu;
+</script>
+</body>
+</html>
