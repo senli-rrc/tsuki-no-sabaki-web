@@ -3323,10 +3323,21 @@
       "offset": 24983
     },
     {
-      "op": "text",
-      "jp": "�\u0001",
-      "text": "�\u0001",
-      "offset": 25131
+      "op": "choice_begin",
+      "choices": [
+        {
+          "text": "俺",
+          "target_cursor": 753
+        },
+        {
+          "text": "アルクェイド",
+          "target_cursor": 922
+        },
+        {
+          "text": "琥珀さん",
+          "target_cursor": 842
+        }
+      ]
     },
     {
       "op": "set_layer",
@@ -4599,10 +4610,21 @@
       "offset": 35485
     },
     {
-      "op": "text",
-      "jp": "�\u0001",
-      "text": "�\u0001",
-      "offset": 35625
+      "op": "choice_begin",
+      "choices": [
+        {
+          "text": "アルクェイド",
+          "target_cursor": 1048
+        },
+        {
+          "text": "琥珀さん",
+          "target_cursor": 1130
+        },
+        {
+          "text": "弓塚さつき",
+          "target_cursor": 1176
+        }
+      ]
     },
     {
       "op": "set_layer",

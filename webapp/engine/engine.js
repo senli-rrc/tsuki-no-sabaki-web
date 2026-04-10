@@ -344,6 +344,13 @@ const VN = (() => {
       switch (ev.op) {
 
         case 'text': {
+          // Skip corrupted binary-extraction artifacts (choice data mis-read as text).
+          // These events contain control characters (e.g. \x01, \x00) or replacement
+          // chars (U+FFFD) that result from the extractor reading branch tables as UTF-16.
+          const rawJp = ev.jp || '';
+          const isGarbage = /[\x00-\x08\x0b\x0c\x0e-\x1f\x7f\ufffd]/.test(rawJp);
+          if (isGarbage) break;   // skip silently, continue event loop
+
           const loads = pendingLoads.splice(0);
           const doShow = async () => {
             await renderTextbox();
