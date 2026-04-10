@@ -22,12 +22,9 @@ const VN = (() => {
   const langSel     = document.getElementById('lang-select');
 
   const W  = 640, H = 480;
-  const TB_H = 150;            // textbox frame height
-  const PORT_W = 165;          // portrait slot width
-  const PORT_H = 200;          // portrait canvas height (overflows above frame by 50px)
-  const FRAME_X = 170;         // frame x when portrait present
-  const FRAME_W = 470;         // frame width (with portrait)
-  const FRAME_H = 150;
+  const TB_H = 150;
+  const PORT_W = 165, PORT_H = 200;
+  const FRAME_X = 170, FRAME_W = 470, FRAME_H = 150;
 
   // ── State ─────────────────────────────────────────
   let events        = [];
@@ -37,13 +34,12 @@ const VN = (() => {
   let skipping      = false;
   let currentLang   = 'jp';
   let bgmEl         = null;
+  let currentBgmFile= null;   // track which file is playing to avoid restarts
   let currentLayer  = 0;
   let hasPortrait   = false;
   let currentPortrait = null;
-  let nextTextColor = '#e8eeff';   // set by color_fade events
-
-  // Pending image loads — await before showing text
-  let pendingLoads = [];
+  let nextTextColor = '#e8eeff';
+  let pendingLoads  = [];
 
   // ── Asset paths ───────────────────────────────────
   const ASSET = {
@@ -52,13 +48,35 @@ const VN = (() => {
     mask:          name => `assets/sprites/${name}_.jpg`,
     bgm:           name => `assets/bgm/${name}.mp3`,
     se:            name => `assets/se/${name}.wav`,
-    // Frame WITH portrait (right decorative border, 470×150)
     frameWith:     'assets/ui/textwins.jpg',
     frameWithMask: 'assets/sprites/textwins_.jpg',
-    // Frame WITHOUT portrait (both borders, 620×150, stretched to 640)
     frameNo:       'assets/sprites/textwinc.jpg',
     frameNoMask:   'assets/sprites/textwinc_.jpg',
   };
+
+  // ── BGM auto-map: background name → BGM track ────
+  // These are approximate assignments based on scene grouping.
+  // Courtroom/office scenes (main story) use tracks han_04–han_13.
+  // Character route / personal scenes use han_01–han_03.
+  // Adjust once you identify tracks by ear.
+  const BG_BGM_MAP = {
+    // Character route outdoor/personal locations
+    han_bg01: 'han_01', han_bg02: 'han_01', han_bg03: 'han_01',
+    han_bg04: 'han_01', han_bg05: 'han_02',
+    han_bg06: 'han_03',  // law firm (shared lobby)
+    // Courtroom complex (main story s02 / s03)
+    han_bg07: 'han_04', han_bg08: 'han_05', han_bg09: 'han_06',
+    han_bg10: 'han_07', han_bg10_02: 'han_07',
+    han_bg11: 'han_08', han_bg12: 'han_09', han_bg13: 'han_10',
+    han_bg14: 'han_11', han_bg14_02: 'han_11', han_bg14_03: 'han_11',
+    han_bg15: 'han_12', han_bg15_02: 'han_12',
+    han_bg17: 'han_13',
+    han_bg28: 'han_14', han_bg29: 'han_15', han_bg30: 'han_15',
+  };
+  // Populate han_bg00a – han_bg00z (outdoor character route scenes)
+  'abcdefghijklmnopqrstuvwxyz'.split('').forEach(c => {
+    BG_BGM_MAP[`han_bg00${c}`] = 'han_01';
+  });
 
   // ── Image loader (cached) ─────────────────────────
   const imgCache = {};
@@ -74,117 +92,97 @@ const VN = (() => {
     return p;
   }
 
-  // Preload both frame variants at startup
   loadImg(ASSET.frameWith);  loadImg(ASSET.frameWithMask);
   loadImg(ASSET.frameNo);    loadImg(ASSET.frameNoMask);
 
   // ── Canvas compositing ────────────────────────────
-  // Draws srcUrl composited with maskUrl (R-channel → alpha) onto an offscreen canvas.
-  // srcCropW/H: source pixels to use (0 = full image).
   async function compositeToCanvas(srcUrl, maskUrl, dstW, dstH, srcCropW, srcCropH) {
     const [img, mask] = await Promise.all([loadImg(srcUrl), loadImg(maskUrl)]);
     if (!img) return null;
-
     const sw = srcCropW || img.naturalWidth;
     const sh = srcCropH || img.naturalHeight;
-
     const off = document.createElement('canvas');
     off.width = dstW; off.height = dstH;
     const ctx = off.getContext('2d');
     ctx.drawImage(img, 0, 0, sw, sh, 0, 0, dstW, dstH);
     const pixels = ctx.getImageData(0, 0, dstW, dstH);
-
     if (mask) {
       const mOff = document.createElement('canvas');
       mOff.width = dstW; mOff.height = dstH;
       const mCtx = mOff.getContext('2d');
       mCtx.drawImage(mask, 0, 0, sw, sh, 0, 0, dstW, dstH);
       const mPx = mCtx.getImageData(0, 0, dstW, dstH);
-      for (let i = 0; i < pixels.data.length; i += 4) {
-        pixels.data[i + 3] = mPx.data[i];   // R channel → alpha
-      }
+      for (let i = 0; i < pixels.data.length; i += 4)
+        pixels.data[i + 3] = mPx.data[i];
     }
-
     ctx.putImageData(pixels, 0, 0);
     return off;
   }
 
   // ── Textbox renderer ──────────────────────────────
-  // Draws the dialogue FRAME to tbCanvas and portrait to portCanvas.
-  // Also adjusts the text area position/alignment based on portrait state.
   async function renderTextbox() {
     tbCtx.clearRect(0, 0, W, TB_H);
     portCtx.clearRect(0, 0, PORT_W, PORT_H);
 
     if (hasPortrait && currentPortrait) {
-      // Portrait present: textwins frame (right border) at FRAME_X
       const [frameOff, faceOff] = await Promise.all([
         compositeToCanvas(ASSET.frameWith, ASSET.frameWithMask, FRAME_W, FRAME_H),
-        // Draw the full 150×200 source into the 165×200 portrait canvas
         compositeToCanvas(ASSET.sprite(currentPortrait), ASSET.mask(currentPortrait),
                           PORT_W, PORT_H, 150, 200),
       ]);
       if (frameOff) tbCtx.drawImage(frameOff, FRAME_X, 0);
       if (faceOff)  portCtx.drawImage(faceOff, 0, 0);
-
-      // Text area: right of portrait
+      // Text area: right of portrait slot
       dialogueArea.style.left      = '188px';
       dialogueArea.style.right     = '18px';
       dialogueArea.style.top       = '16px';
       dialogueArea.style.bottom    = '14px';
       dialogueArea.style.textAlign = 'left';
     } else {
-      // No portrait: textwinc frame (both borders, 620px) stretched to 640px
+      // No portrait: full-width textwinc frame (620px stretched to 640px)
       const frameOff = await compositeToCanvas(
         ASSET.frameNo, ASSET.frameNoMask, W, TB_H
       );
       if (frameOff) tbCtx.drawImage(frameOff, 0, 0);
-
-      // Text area: centered within frame
+      // Narrator text: use left-align so original full-width spaces work correctly
       dialogueArea.style.left      = '30px';
       dialogueArea.style.right     = '30px';
       dialogueArea.style.top       = '16px';
       dialogueArea.style.bottom    = '14px';
-      dialogueArea.style.textAlign = 'center';
+      dialogueArea.style.textAlign = 'left';
     }
   }
 
   // ── Sprite compositor ─────────────────────────────
   async function drawSprite(name) {
     const [base, mask] = await Promise.all([
-      loadImg(ASSET.sprite(name)),
-      loadImg(ASSET.mask(name)),
+      loadImg(ASSET.sprite(name)), loadImg(ASSET.mask(name)),
     ]);
     sprCtx.clearRect(0, 0, W, H);
     if (!base) return;
-
-    if (!mask) {
-      sprCtx.drawImage(base, 0, 0, W, H);
-      return;
-    }
+    if (!mask) { sprCtx.drawImage(base, 0, 0, W, H); return; }
 
     const off = document.createElement('canvas');
     off.width = base.naturalWidth; off.height = base.naturalHeight;
     const offCtx = off.getContext('2d');
     offCtx.drawImage(base, 0, 0);
-    const baseData = offCtx.getImageData(0, 0, off.width, off.height);
+    const bd = offCtx.getImageData(0, 0, off.width, off.height);
 
     const mOff = document.createElement('canvas');
     mOff.width = off.width; mOff.height = off.height;
     const mCtx = mOff.getContext('2d');
     mCtx.drawImage(mask, 0, 0, off.width, off.height);
-    const maskData = mCtx.getImageData(0, 0, off.width, off.height);
+    const md = mCtx.getImageData(0, 0, off.width, off.height);
 
-    for (let i = 0; i < baseData.data.length; i += 4) {
-      baseData.data[i + 3] = maskData.data[i];
-    }
-    offCtx.putImageData(baseData, 0, 0);
+    for (let i = 0; i < bd.data.length; i += 4)
+      bd.data[i + 3] = md.data[i];
+    offCtx.putImageData(bd, 0, 0);
 
     const sw = base.naturalWidth, sh = base.naturalHeight;
     sprCtx.drawImage(off, Math.round((W - sw) / 2), H - sh);
   }
 
-  // ── Background ────────────────────────────────────
+  // ── Background loader + auto-BGM ─────────────────
   async function drawBackground(name) {
     const img = await loadImg(ASSET.bg(name));
     if (!img) return;
@@ -192,6 +190,12 @@ const VN = (() => {
     const scale = Math.max(W / img.naturalWidth, H / img.naturalHeight);
     const dw = img.naturalWidth * scale, dh = img.naturalHeight * scale;
     bgCtx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+
+    // Auto-play BGM based on scene if nothing is currently playing
+    if (!bgmEl || bgmEl.paused || bgmEl.ended) {
+      const autoBgm = BG_BGM_MAP[name.toLowerCase()];
+      if (autoBgm) playBGM(autoBgm);
+    }
   }
 
   // ── Portrait state ────────────────────────────────
@@ -216,13 +220,53 @@ const VN = (() => {
         n.startsWith('adventure')) {
       p = drawBackground(name);
     } else if (n === 'textwins' || n === 'textwinc' || n === 'l_wins' || n === 'mind') {
-      return;  // frame handled by renderTextbox
+      return;
     } else if (n.startsWith('han_') && n.endsWith('f')) {
-      p = setPortrait(name);  // han_*f = face portrait
+      p = setPortrait(name);
     } else {
       p = drawSprite(name);
     }
     if (p) pendingLoads.push(p);
+  }
+
+  // ── Audio ─────────────────────────────────────────
+  // One-shot sound effects (UI interactions)
+  function playSE(name) {
+    if (!name) return;
+    try { new Audio(ASSET.se(name)).play().catch(() => {}); } catch(e) {}
+  }
+
+  // Game SFX from script events
+  function playSound(file) {
+    if (!file) return;
+    try { new Audio(ASSET.se(file)).play().catch(() => {}); } catch(e) {}
+  }
+
+  function playBGM(file) {
+    if (!file || file === currentBgmFile) return;  // avoid restarting same track
+    if (bgmEl) { bgmEl.pause(); bgmEl = null; }
+    currentBgmFile = file;
+    bgmEl = new Audio(ASSET.bgm(file));
+    bgmEl.loop = true;
+    bgmEl.volume = 0.45;
+    bgmEl.play().catch(() => {});
+  }
+
+  function stopBGM() {
+    if (bgmEl) { bgmEl.pause(); bgmEl = null; }
+    currentBgmFile = null;
+  }
+
+  // ── Fade ──────────────────────────────────────────
+  function doFade(duration, onDone) {
+    const ms = skipping ? 0 : Math.min(duration, 1500);
+    fadeOverlay.style.transition = `opacity ${ms/2}ms ease`;
+    fadeOverlay.style.opacity = '1';
+    setTimeout(() => {
+      fadeOverlay.style.transition = `opacity ${ms/2}ms ease`;
+      fadeOverlay.style.opacity = '0';
+      setTimeout(onDone, skipping ? 0 : ms / 2);
+    }, skipping ? 0 : ms / 2);
   }
 
   // ── Text rendering ────────────────────────────────
@@ -240,12 +284,14 @@ const VN = (() => {
     dialogueEl.style.color = nextTextColor;
     clickInd.style.display = 'none';
     clearTimeout(typeTimer);
+    playSE('page');       // page-turn sound when text begins
     typeNextChar();
   }
 
   function typeNextChar() {
     if (charIdx >= fullText.length) {
       clickInd.style.display = 'block';
+      playSE('read');     // soft chime when typing finishes
       return;
     }
     dialogueEl.textContent += fullText[charIdx++];
@@ -263,33 +309,6 @@ const VN = (() => {
     return true;
   }
 
-  // ── Audio ─────────────────────────────────────────
-  function playSound(file) {
-    if (!file) return;
-    try { new Audio(ASSET.se(file)).play().catch(() => {}); } catch(e) {}
-  }
-
-  function playBGM(file) {
-    if (!file) return;
-    if (bgmEl) { bgmEl.pause(); bgmEl = null; }
-    bgmEl = new Audio(ASSET.bgm(file));
-    bgmEl.loop = true;
-    bgmEl.volume = 0.45;
-    bgmEl.play().catch(() => {});
-  }
-
-  // ── Fade ──────────────────────────────────────────
-  function doFade(duration, onDone) {
-    const ms = skipping ? 0 : Math.min(duration, 1500);
-    fadeOverlay.style.transition = `opacity ${ms/2}ms ease`;
-    fadeOverlay.style.opacity = '1';
-    setTimeout(() => {
-      fadeOverlay.style.transition = `opacity ${ms/2}ms ease`;
-      fadeOverlay.style.opacity = '0';
-      setTimeout(onDone, skipping ? 0 : ms / 2);
-    }, skipping ? 0 : ms / 2);
-  }
-
   // ── Event execution ───────────────────────────────
   function execute() {
     while (cursor < events.length) {
@@ -299,13 +318,12 @@ const VN = (() => {
       switch (ev.op) {
 
         case 'text': {
-          // Await all pending loads (bg/sprite/portrait), render textbox, show dialogue.
           const loads = pendingLoads.splice(0);
           const doShow = async () => {
             await renderTextbox();
             showText(ev.text, ev.jp);
-            waitSource    = 'text';
-            waitingClick  = true;
+            waitSource   = 'text';
+            waitingClick = true;
             updateStatus();
           };
           Promise.all(loads).then(doShow);
@@ -313,7 +331,6 @@ const VN = (() => {
         }
 
         case 'wait_click':
-          // Scene setup pause — do NOT clear portrait.
           waitSource   = 'wait_click';
           waitingClick = true;
           updateStatus();
@@ -338,7 +355,7 @@ const VN = (() => {
           break;
 
         case 'color_fade':
-          // In this engine color_fade sets the next dialogue text color.
+          // Sets text colour for the next dialogue line.
           nextTextColor = `rgb(${ev.r},${ev.g},${ev.b})`;
           break;
 
@@ -346,11 +363,27 @@ const VN = (() => {
           playSound(ev.file);
           break;
 
-        case 'load_bgm':
-          if (ev.file) playBGM(ev.file);
+        case 'load_bgm': {
+          // file may be:
+          //   '' or null  → no-op (BGM index 0 = stop in original; we leave it alone)
+          //   '\x01'–'\x0f' → single-byte index → han_01…han_15
+          //   a plain string → direct filename (future-proof)
+          const f = ev.file || '';
+          if (f.length === 1) {
+            const idx = f.charCodeAt(0);
+            if (idx >= 1 && idx <= 15) {
+              playBGM(`han_${String(idx).padStart(2, '0')}`);
+            } else if (idx === 0) {
+              stopBGM();
+            }
+          } else if (f.length > 1) {
+            playBGM(f);
+          }
           break;
+        }
 
         case 'play_bgm':
+          // Opcode with packed value — BGM management handled via load_bgm + auto-BGM
           break;
 
         case 'wait':
@@ -388,15 +421,14 @@ const VN = (() => {
     if (!waitingClick) return;
 
     if (waitSource === 'text') {
-      // First click: finish typing; second: advance
       if (!finishTyping()) return;
-      // Clear dialogue state
+      playSE('click');    // click-advance sound
       textbox.style.display = 'none';
       dialogueEl.textContent = '';
       clearPortrait();
-      nextTextColor = '#e8eeff';   // reset to default
+      nextTextColor = '#e8eeff';
     }
-    // For 'wait_click': just advance — portrait state preserved
+    // wait_click: no SE, no portrait clear — just advance scene setup
 
     waitingClick = false;
     waitSource   = null;
@@ -423,6 +455,7 @@ const VN = (() => {
       btn.className = 'choice-btn';
       btn.textContent = c.text;
       btn.onclick = () => {
+        playSE('select');   // selection sound
         choiceMenu.style.display = 'none';
         cursor = c.target_cursor || cursor;
         execute();
@@ -474,7 +507,7 @@ const VN = (() => {
       if (waitingClick) container.click();
     },
     backToMenu() {
-      if (bgmEl) { bgmEl.pause(); bgmEl = null; }
+      stopBGM();
       textbox.style.display = 'none';
       bgCtx.clearRect(0, 0, W, H);
       sprCtx.clearRect(0, 0, W, H);

@@ -218,6 +218,14 @@
 
   <div id="fade-overlay"></div>
   <div id="choice-menu"></div>
+
+  <!-- Intro video overlay — plays before Chapter 1; z-index above everything -->
+  <video id="intro-video"
+         style="position:absolute;top:0;left:0;width:640px;height:480px;
+                z-index:30;background:#000;display:none;"
+         preload="none">
+    <source src="assets/video/han_mov01.mp4" type="video/mp4">
+  </video>
 </div>
 
 <!-- ── Dev controls (shown while game is running) ── -->
@@ -285,6 +293,38 @@
     VN.restart();
   }
 
+  function startGameWithIntro() {
+    menuScreen.style.display    = 'none';
+    chapterScreen.style.display = 'none';
+    gameContainer.style.display = 'block';
+    controls.style.display      = 'flex';
+    statusBar.style.display     = 'block';
+
+    const vid = document.getElementById('intro-video');
+
+    function launchAkane() {
+      vid.style.display = 'none';
+      vid.pause();
+      vid.currentTime = 0;
+      scriptSel.value = 'akane';
+      VN.restart();
+    }
+
+    // Try playing the intro video; fall back immediately if unavailable
+    vid.style.display = 'block';
+    vid.currentTime   = 0;
+    vid.onended       = launchAkane;
+    vid.onerror       = launchAkane;
+
+    // Also allow clicking the video to skip it
+    vid.onclick = launchAkane;
+
+    const playPromise = vid.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => launchAkane());
+    }
+  }
+
   // ── Menu button wiring ────────────────────────────
   document.getElementById('menu-start').onclick  = showChapterSelect;
   document.getElementById('menu-load').onclick   = () => {};  // TODO: save/load
@@ -292,9 +332,9 @@
   document.getElementById('menu-exit').onclick   = () => window.close();
 
   // ── Chapter select wiring ─────────────────────────
-  document.getElementById('ch-1').onclick    = () => startGame('s02_01');
-  document.getElementById('ch-2').onclick    = () => startGame('s02_20');
-  document.getElementById('ch-3').onclick    = () => startGame('s03_01');
+  document.getElementById('ch-1').onclick    = () => startGameWithIntro();   // intro video → akane
+  document.getElementById('ch-2').onclick    = () => startGame('s02_01');    // 反転姉妹 upper
+  document.getElementById('ch-3').onclick    = () => startGame('s03_01');    // 反転、そしてサヨナラ
   document.getElementById('ch-back').onclick = showMenu;
 
   // ── Global back-to-menu hook for engine ──────────
