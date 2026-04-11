@@ -251,6 +251,9 @@ const VN = (() => {
     const img = await loadImg(ASSET.bg(name));
     if (!img) return;
     bgCtx.clearRect(0, 0, W, H);
+    // Scene change: clear the evidence item layer so items from the
+    // previous location don't bleed into the new scene.
+    itemCtx.clearRect(0, 0, W, H);
     const scale = Math.max(W / img.naturalWidth, H / img.naturalHeight);
     const dw = img.naturalWidth * scale, dh = img.naturalHeight * scale;
     bgCtx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
