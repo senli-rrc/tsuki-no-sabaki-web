@@ -68,8 +68,8 @@
       Frame mask makes it semi-transparent. Portrait mask removes black background.
 
       Layout in the 640×150 canvas:
-        x: 0──────────170: portrait (composited with mask → transparent bg)
-        x: 170─────────640: frame textwins.jpg (composited with mask → semi-transparent)
+        x: 0──────────168: portrait (composited with mask → transparent bg)
+        x: 168─────────640: frame textwins.jpg (composited with mask → semi-transparent)
     */
     #textbox {
       position: absolute;
@@ -149,6 +149,24 @@
       color: #ffe8b0;
     }
 
+    /* ── Evidence-pending hint bar ───────────────────
+       A thin amber bar at the very top of the game hints that right-click
+       or key '1' opens the coat menu for evidence selection.             */
+    #evidence-hint {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #c87800, #f0c040, #c87800);
+      z-index: 27;
+      display: none;
+      pointer-events: none;
+      animation: hint-pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes hint-pulse {
+      0%, 100% { opacity: 0.6; }
+      50%       { opacity: 1.0; }
+    }
+
     /* ── Controls ─────────────────────────────────── */
     #controls {
       display: none;
@@ -218,9 +236,9 @@
                  z-index:3;pointer-events:none;"></canvas>
   <!-- Portrait canvas sits above sprites but below the textbox frame;
        200px tall so the head pokes above the 150px frame -->
-  <canvas id="portrait-canvas" width="165" height="200"
+  <canvas id="portrait-canvas" width="168" height="200"
           style="position:absolute;left:0;bottom:0;z-index:4;pointer-events:none;
-                 width:165px;height:200px;"></canvas>
+                 width:168px;height:200px;"></canvas>
 
   <div id="textbox">
     <canvas id="textbox-canvas" width="640" height="150"></canvas>
@@ -230,6 +248,9 @@
     </div>
   </div>
 
+  <!-- Evidence-pending hint: amber bar at top visible when つきつける is available -->
+  <div id="evidence-hint"></div>
+
   <div id="fade-overlay"></div>
   <!-- Testimony / action UI overlay — sits above fade(10) but below choice(20) -->
   <div id="ui-overlay"
@@ -238,6 +259,50 @@
     <img id="ui-img" style="position:absolute;top:0;left:0;" alt="">
   </div>
   <div id="choice-menu"></div>
+
+  <!-- ── Coat menu overlay (right-click / key '1' / mouse-to-top) ───────
+       Four-slot top bar: ゆさぶる | データファイル | [つきつける] | 戻る
+       Composited with mask so only the button trapezoids are opaque.
+       z-index 28 = above choice (20) but below video (30).             -->
+  <div id="coat-menu"
+       style="position:absolute;top:0;left:0;width:640px;height:480px;
+              z-index:28;display:none;pointer-events:auto;">
+    <canvas id="coat-canvas" width="640" height="480"
+            style="position:absolute;top:0;left:0;width:640px;height:480px;"></canvas>
+    <!-- Invisible click-zones over each button (y 2-48, widths tuned to mask) -->
+    <div id="coat-yusaburu" style="position:absolute;left:5px; top:2px;width:150px;height:46px;cursor:pointer;"></div>
+    <div id="coat-datafile" style="position:absolute;left:175px;top:2px;width:152px;height:46px;cursor:pointer;"></div>
+    <!-- slot 3: つきつける — only shown in evidence-select mode -->
+    <div id="coat-present"  style="position:absolute;left:345px;top:2px;width:152px;height:46px;cursor:pointer;display:none;"></div>
+    <div id="coat-back"     style="position:absolute;left:517px;top:2px;width:122px;height:46px;cursor:pointer;"></div>
+  </div>
+
+  <!-- ── Evidence book overlay (データファイル → 証拠品一覧) ─────────────
+       Ch1: han_item_00.jpg  Ch2/3: han_it_00.jpg  z-index 29 = above coat-menu.
+       All navigation (item slots, tabs, 戻る, character page) is handled by
+       the canvas click listener in engine.js — no static button divs needed.  -->
+  <div id="evidence-book"
+       style="position:absolute;top:0;left:0;width:640px;height:480px;
+              z-index:29;display:none;pointer-events:auto;">
+    <canvas id="evidence-canvas" width="640" height="480"
+            style="position:absolute;top:0;left:0;width:640px;height:480px;"></canvas>
+    <!-- つきつける button: shown only in ch2 testimony mode on item detail pages.
+         Positioned to overlay the button area printed on han_it_XXh.jpg (approx).
+         Adjust left/bottom if the button in the artwork is at a different position. -->
+    <div id="ev-present-btn"
+         style="position:absolute;left:460px;bottom:28px;width:160px;height:48px;
+                cursor:pointer;display:none;"
+         title="つきつける"></div>
+    <!-- Photo click-zone: invisible overlay over the cyan text line in ch1 detail pages.
+         han_item_109.jpg cyan text is at canvas coords x=253–563, y=242–257 (measured).
+         Clicking this zone shows han_item_109_02.jpg (the photo referenced by cyan text).
+         han_item_110 has similar cyan text but no _02 file; that case is handled in JS
+         by falling through to sub-page 2 navigation. -->
+    <div id="ev-photo-btn"
+         style="position:absolute;left:253px;top:238px;width:312px;height:24px;
+                cursor:pointer;display:none;"
+         title="画像を見る"></div>
+  </div>
 
   <!-- Intro video overlay — plays before Chapter 1; z-index above everything -->
   <video id="intro-video"

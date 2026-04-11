@@ -61,7 +61,7 @@ No build step. Edit source files and hard-refresh the browser.
 |---------|---------|---------|
 | 1 | `#bg-canvas` 640×480 | Background images |
 | 2 | `#sprite-canvas` 640×480 | Full-body character sprites (mask-composited) |
-| 4 | `#portrait-canvas` 165×200 | Face portrait — taller than frame so head overflows above |
+| 4 | `#portrait-canvas` 168×200 | Face portrait — taller than frame so head overflows above |
 | 5 | `#textbox` div | Contains frame canvas + dialogue text overlay |
 | 10 | `#fade-overlay` | Black fade between scenes |
 | 20 | `#choice-menu` | Branch choice buttons |
@@ -70,7 +70,7 @@ No build step. Edit source files and hard-refresh the browser.
 Events are processed synchronously in `execute()`. Async events (`text`, `fade`, `wait`, `wait_click`) break the loop and resume on user input or timeout.
 
 **Critical: `wait_click` vs `text`**
-`wait_click` is a *scene-setup* pause (sprite swap, portrait load) that must NOT clear the portrait. Only advancing from a `text` event calls `clearPortrait()`. This is tracked via `waitSource = 'text' | 'wait_click'`.
+`wait_click` is a *scene-setup* pause (sprite swap, portrait load) that must NOT clear the portrait. Advancing a `text` event hides `#portrait-canvas` and `#textbox` but does **not** call `clearPortrait()` — portrait state (`hasPortrait`, `currentPortrait`) is preserved so the next line from the same speaker restores it. `clearPortrait()` is called only when `textwinc` or `mind` is loaded (narrator mode) or on scene/script reset. This is tracked via `waitSource = 'text' | 'wait_click'`.
 
 ### Simultaneous asset loading
 All `load_image` calls push a Promise to `pendingLoads[]`. When a `text` event is hit, `Promise.all(pendingLoads)` is awaited before rendering — background, sprite, and portrait all appear at the same frame.
@@ -87,10 +87,12 @@ All `load_image` calls push a Promise to `pendingLoads[]`. When a `text` event i
 
 | State | Frame image | Frame x | Portrait canvas |
 |-------|-------------|---------|-----------------|
-| Character speaking | `assets/ui/textwins.jpg` (470×150) | x = 170 | Rendered (165×200) |
-| Narrator / title card | `assets/sprites/textwinc.jpg` (620×150) | x = 0, stretched to 640 | Cleared |
+| Character speaking | `assets/ui/textwins.jpg` (472×150) | x = 168 | Rendered (168×200), visible |
+| Narrator / title card | `assets/sprites/textwinc.jpg` (620×150) | x = 0, stretched to 640 | Hidden (`display:none`) |
 
-Face portraits (`han_*f.jpg`, 150×200) are drawn full-height into the 165×200 portrait canvas. Because the canvas is 200 px tall but the frame is only 150 px tall (both bottom-anchored), the top 50 px of the portrait shows above the frame.
+Face portraits (`han_*f.jpg`, 150×200) are drawn full-height into the 168×200 portrait canvas. Because the canvas is 200 px tall but the frame is only 150 px tall (both bottom-anchored), the top 50 px of the portrait shows above the frame.
+
+`#portrait-canvas` visibility is always in sync with `#textbox`: both hidden between lines, both shown by `renderTextbox()`. The portrait canvas is never visible without an accompanying dialogue frame.
 
 ---
 
@@ -116,7 +118,7 @@ Each `scripts/*.json` file has an `{ "events": [...] }` array. Key event types:
 
 | `op` | Fields | Notes |
 |------|--------|-------|
-| `text` | `jp`, `text`, `offset` | Show dialogue; awaits pendingLoads first |
+| `text` | `jp`, `text`, `zh`, `offset` | Show dialogue; awaits pendingLoads first. `zh` = Simplified Chinese translation (optional) |
 | `load_image` | `name` | Dispatches to bg / sprite / portrait / ignore |
 | `load_ui` | `name` | Currently ignored (frame handled by renderTextbox) |
 | `wait_click` | — | Scene-setup pause; does NOT clear portrait |
@@ -134,7 +136,28 @@ Each `scripts/*.json` file has an `{ "events": [...] }` array. Key event types:
 
 ## Common development tasks
 
-### Add a translated line
+### Add / update a Chinese translation
+`zh` fields are stored directly in each `webapp/scripts/*.json` event. To (re-)translate using Claude Haiku:
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+
+# Translate all scripts (skips already-translated lines)
+python3 tools/translate_zh.py
+
+# Translate specific scripts only
+python3 tools/translate_zh.py --scripts s02_01 s02_02
+
+# Re-translate lines that already have zh (e.g. to fix quality)
+python3 tools/translate_zh.py --scripts s02_01 --force
+
+# Preview without calling the API
+python3 tools/translate_zh.py --dry-run
+```
+
+Formatting codes (`\x07`, `!s`, `@`) are protected by placeholder substitution during translation and restored afterwards. Cost: ~$1–2 for the full 16 000-line corpus with Haiku.
+
+### Add a translated line (legacy English path)
 Edit `translation/strings.json` (keyed by `offset`), then run `tools/reinsert_text.py` to regenerate the affected `scripts/*.json` file.
 
 ### Convert MPG videos to browser-compatible MP4
@@ -153,5 +176,6 @@ See `docs/setup.md` — requires original disc image and the Python tools.
 - **Do** edit `engine.js` and `index.html` directly — no build step.
 - **Do** use `compositeToCanvas()` for any image+mask pair; it is cached.
 - **Don't** commit `webapp/assets/` — those are binary files totalling ~281 MB.
-- **Don't** call `clearPortrait()` inside the `wait_click` branch of the click handler.
+- **Don't** call `clearPortrait()` on text-advance — portrait state must persist across consecutive lines from the same speaker. Call it only when `textwinc`/`mind` loads or on script/scene reset.
+- **Don't** add `\x07` to the garbage-character filter — it is a legitimate PSG in-text page-break used in ~31% of all dialogue events. Strip it in pre-processing before the regex test.
 - **Don't** push `extracted/` or `*.img` disc images.

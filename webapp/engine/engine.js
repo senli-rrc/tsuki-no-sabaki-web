@@ -21,14 +21,21 @@ const VN = (() => {
   const choiceMenu  = document.getElementById('choice-menu');
   const uiOverlay   = document.getElementById('ui-overlay');
   const uiImg       = document.getElementById('ui-img');
+  const coatMenu    = document.getElementById('coat-menu');
+  const coatCanvas  = document.getElementById('coat-canvas');
+  const coatCtx     = coatCanvas.getContext('2d');
+  const evBook      = document.getElementById('evidence-book');
+  const evCanvas    = document.getElementById('evidence-canvas');
+  const evCtx       = evCanvas.getContext('2d');
+  const evHint      = document.getElementById('evidence-hint');
   const statusEl    = document.getElementById('status');
   const scriptSel   = document.getElementById('script-select');
   const langSel     = document.getElementById('lang-select');
 
   const W  = 640, H = 480;
   const TB_H = 150;
-  const PORT_W = 165, PORT_H = 200;
-  const FRAME_X = 170, FRAME_W = 470, FRAME_H = 150;
+  const PORT_W = 168, PORT_H = 200;
+  const FRAME_X = 168, FRAME_W = 472, FRAME_H = 150;
 
   // ── State ─────────────────────────────────────────
   let events        = [];
@@ -51,6 +58,37 @@ const VN = (() => {
   let uiTimer       = null;
   let nanakoTimer   = null;
 
+  // ── Evidence system ───────────────────────────────
+  // evidenceSelectPending: set when color_fade val=853009 is seen; tells the
+  // engine that the next player interaction should present evidence rather
+  // than just advancing normally.
+  // evidenceCorrectCursor: cursor index past ALL consecutive wrong-evidence
+  // jump blocks, computed at the time the signal is received.
+  // evidenceInventory: names of acquired items for the current script.
+  //   Ch1 items: 'han_item107', 'han_item112', ... (full-screen overlay names)
+  //   Ch2 items: 'han_it_03l', 'han_it_05r', ... (l/r scene icons = acquisition signal)
+  let evidenceSelectPending  = false;
+  let evidenceCorrectCursor  = -1;
+  let evidenceInventory      = [];
+
+  // ── Evidence book UI state ────────────────────────
+  // currentScript:    name of the script currently loaded (e.g. 'haruka', 's02_01')
+  // evBookView:       which sub-screen the book is showing
+  // evDetailItem:     inventory name of the item being viewed in detail
+  // evDetailSubpage:  1 = main detail, 2+ = sub-pages / zoom levels
+  // evDetailNumbered: true if the item uses numbered sub-pages (e.g. a1, a2) vs
+  //                   unnumbered main + optional 02-suffix sub-pages (a + a02)
+  // evCharDetail:     character ID currently shown in detail, e.g. 'ski'
+  // evCharSubpage:    1 = main char page, 2 = 02 variant, 3 = 03 variant
+  let currentScript    = '';
+  let evBookView       = 'overview';  // 'overview' | 'detail' | 'character' | 'chardetail'
+  let evDetailItem     = null;
+  let evDetailSubpage  = 1;
+  let evDetailNumbered = false;  // true = 05/14/16-style (a1..aN), false = 03-style (a, a02)
+  let evShowingPhoto   = false;  // true while the _02 photo overlay is shown over the detail
+  let evCharDetail     = null;
+  let evCharSubpage    = 1;
+
   // ── Asset paths ───────────────────────────────────
   const ASSET = {
     bg:            name => `assets/bg/${name}.jpg`,
@@ -65,6 +103,12 @@ const VN = (() => {
     frameLeftMask: 'assets/sprites/l_wins_.jpg',
     frameNo:       'assets/sprites/textwinc.jpg',
     frameNoMask:   'assets/sprites/textwinc_.jpg',
+    // Evidence system
+    coatMenu:      'assets/ui/coatmenu01.jpg',
+    coatMenuMask:  'assets/ui/coatmenu01_.jpg',
+    coatMenuOff:   'assets/ui/coatmenu01_off.jpg',
+    coatMenuOffM:  'assets/ui/coatmenu01_off_.jpg',
+    // evBook path is chapter-aware: use evBookAsset() at runtime
   };
 
   // ── BGM auto-map: background name → BGM track ────
@@ -156,7 +200,8 @@ const VN = (() => {
       if (frameOff) tbCtx.drawImage(frameOff, isRight ? 0 : FRAME_X, 0);
       if (faceOff)  portCtx.drawImage(faceOff, 0, 0);
 
-      // Move portrait canvas to the appropriate side
+      // Show portrait canvas and position it on the correct side
+      portCanvas.style.display = '';
       if (isRight) {
         portCanvas.style.left  = 'auto';
         portCanvas.style.right = '0';
@@ -173,6 +218,7 @@ const VN = (() => {
       dialogueArea.style.textAlign = 'left';
     } else {
       // No portrait: full-width textwinc frame (620px stretched to 640px)
+      portCanvas.style.display = 'none';
       const frameOff = await compositeToCanvas(
         ASSET.frameNo, ASSET.frameNoMask, W, TB_H
       );
@@ -262,6 +308,327 @@ const VN = (() => {
     itemCtx.drawImage(off, 0, 0);
   }
 
+  // ── Evidence system helpers ───────────────────────
+  // Scan forward from fromCursor for the last jump event within 500 events.
+  // The cursor AFTER that jump is the "correct evidence" path start.
+  function findEvidenceCorrectCursor(fromCursor) {
+    let lastJump = -1;
+    const limit  = Math.min(fromCursor + 500, events.length);
+    for (let i = fromCursor; i < limit; i++) {
+      if (events[i].op === 'jump') lastJump = i;
+    }
+    return lastJump >= 0 ? lastJump + 1 : fromCursor;
+  }
+
+  // ── Evidence book helpers ─────────────────────────
+  // Slot grid for han_item_00.jpg (ch1).  Pixel boundaries measured from the image:
+  //   Left page:  3 cols at x=47,132,217 (w=70 each)
+  //   Right page: 3 cols at x=353,438,523 (w=70 each)
+  //   Row 1: y=71  h=92  │  Row 2: y=197 h=91  │  Row 3: y=323 h=92
+  //
+  // Item ordering (ch1): slots 0-8 = left page items 101-109 (always have content in bg),
+  //   slots 9-11 = right page row1 items 110-112, slots 12-17 = mostly empty.
+  // Items 101-103 are always unlocked; 104-113 need story acquisition.
+  //
+  // The same slot grid is reused for ch2 (han_it_00.jpg) — adjust coordinates
+  // if the ch2 book image turns out to have a different layout.
+  const EV_SLOTS = [
+    // Left page — Row 1 (items 101-103)
+    {x:47,  y:71,  w:70, h:92}, {x:132, y:71,  w:70, h:92}, {x:217, y:71,  w:70, h:92},
+    // Left page — Row 2 (items 104-106)
+    {x:47,  y:197, w:70, h:91}, {x:132, y:197, w:70, h:91}, {x:217, y:197, w:70, h:91},
+    // Left page — Row 3 (items 107-109)
+    {x:47,  y:323, w:70, h:92}, {x:132, y:323, w:70, h:92}, {x:217, y:323, w:70, h:92},
+    // Right page — Row 1 (items 110-112)
+    {x:353, y:71,  w:70, h:92}, {x:438, y:71,  w:70, h:92}, {x:523, y:71,  w:70, h:92},
+    // Right page — Row 2 (item 113, then empty)
+    {x:353, y:197, w:70, h:91}, {x:438, y:197, w:70, h:91}, {x:523, y:197, w:70, h:91},
+    // Right page — Row 3 (permanently empty slots)
+    {x:353, y:323, w:70, h:92}, {x:438, y:323, w:70, h:92}, {x:523, y:323, w:70, h:92},
+  ];
+
+  // Hot-zone for the 関係者ファイルへ / 証拠品一覧へ tab (right edge, lower half)
+  const EV_SIDETAB  = {x:608, y:260, w:32, h:150};
+  // Hot-zone for the 戻る button (top-right of book overview)
+  const EV_BACKTAB  = {x:540, y:4,   w:95, h:42};
+
+  // Ch1 scripts use han_item_00; ch2/3 use han_it_00
+  function getChapterType() {
+    return ['akane','haruka','mitsuki'].includes(currentScript) ? 'ch1' : 'ch2';
+  }
+  function evBookAsset() {
+    return getChapterType() === 'ch1'
+      ? 'assets/sprites/han_item_00.jpg'
+      : 'assets/sprites/han_it_00.jpg';
+  }
+
+  // Parse an inventory name into { type:'ch1'|'ch2', num:Number }
+  // Ch1 inventory names: 'han_item107'  (bare number, no underscore after 'item')
+  // Ch2 inventory names: 'han_it_03l'   (2-digit number + l/r suffix)
+  function invItemId(invName) {
+    const m1 = invName.match(/^han_item(\d{3})$/i);
+    if (m1) return { type:'ch1', num:parseInt(m1[1], 10) };
+    const m2 = invName.match(/^han_it_(\d+)[lr]$/i);
+    if (m2) return { type:'ch2', num:parseInt(m2[1], 10) };
+    return null;
+  }
+
+  // 0-based slot index (ch1 items start at 101 → slot 0)
+  function invSlotIndex(invName) {
+    const id = invItemId(invName);
+    if (!id) return -1;
+    return id.type === 'ch1' ? id.num - 101 : id.num - 1;
+  }
+
+  // Base name for loading detail/thumbnail images (without variant suffix)
+  function invDetailBase(invName) {
+    const id = invItemId(invName);
+    if (!id) return null;
+    if (id.type === 'ch1') return `han_item_${id.num}`;        // e.g. 'han_item_107'
+    return `han_it_${String(id.num).padStart(2,'0')}`;         // e.g. 'han_it_03'
+  }
+
+  // Thumbnail sprite to draw inside the book grid slot
+  function invThumbName(invName) {
+    const id = invItemId(invName);
+    if (!id) return null;
+    if (id.type === 'ch1') return `han_item_${id.num}`;        // detail page as thumbnail
+    return invName;                                             // e.g. 'han_it_03l' itself
+  }
+
+  // ── Character roster mapped to visual slot positions ─────────────────────
+  // Flat array of 54 entries = 18 slots × 3 pages.
+  // Index = (page - 1) * 18 + slotIndex.
+  // null = slot is visually empty or has no selectable profile.
+  //
+  // Page 1 (han_cha.jpg)   — 10 occupied slots (0-9), 8 empty (10-17)
+  // Page 2 (han_cha02.jpg) — 14 occupied slots (0-13), 4 empty (14-17)
+  // Page 3 (han_cha03.jpg) — 12 occupied slots (0-11), 6 empty (12-17)
+  //
+  // All positions confirmed by user (story order within each chapter page).
+  const CHAR_IDS = [
+    // ── Page 1 (han_cha.jpg) — 10 chars, 8 empty ─────────
+    'ski', 'khk', 'stk', 'arc', 'cel', 'sev', 'akr', 'ahk', 'kgm', 'akh',
+    null,  null,  null,  null,  null,  null,  null,  null,
+
+    // ── Page 2 (han_cha02.jpg) — 14 chars, 4 empty ───────
+    'ski', 'khk', 'hsi', 'ahk', 'akh', 'tke', 'hni', 'suk',
+    'cel', 'sev', 'akr', 'roa', 'arc', 'len',
+    null,  null,  null,  null,
+
+    // ── Page 3 (han_cha03.jpg) — 12 chars, 6 empty ───────
+    'ski', 'akh', 'khk', 'hsi', 'ahk', 'arc',
+    'cel', 'sev', 'tke', 'mkh', 'not', 'rri',
+    null,  null,  null,  null,  null,  null,
+  ];
+  // Sub-pages per character (02 = second panel, 03 = third panel).
+  // Only list the sub-pages that are confirmed to exist.
+  const CHAR_SUBPAGES = {
+    ski:3, akh:3, ahk:3, arc:3, khk:3, sev:3, cel:3, tke:3, rri:3,
+    hsi:3, not:3,
+    akr:2, sev:2,    // sev has both 02 and 03 so already in group above
+  };
+  // Maximum confirmed sub-page for each character (1 = main page only)
+  function charMaxPage(id) { return CHAR_SUBPAGES[id] || 1; }
+
+  // ── Evidence book render functions ───────────────
+  async function renderEvBookOverview() {
+    const bgImg = await loadImg(evBookAsset());
+    evCtx.clearRect(0, 0, W, H);
+    if (bgImg) evCtx.drawImage(bgImg, 0, 0, W, H);
+
+    // The book background already contains all item thumbnails at their slot positions.
+    // Locked (unacquired) items are hidden by drawing a white mask panel on top —
+    // matching the original PSG engine behaviour where the exe overlaid white rects.
+    //
+    // Ch1: items 101-103 are always visible (no mask needed).
+    //      Items 104-113 get a white mask until acquired via story event.
+    // Ch2: all items get a white mask until acquired.
+    const isCh1 = getChapterType() === 'ch1';
+
+    // Build a Set of acquired slot indices for quick lookup
+    const acquired = new Set();
+    if (isCh1) {
+      // Always show 101-103 (slots 0-2)
+      acquired.add(0); acquired.add(1); acquired.add(2);
+      // Add story-acquired items
+      for (const n of evidenceInventory) {
+        const id = invItemId(n);
+        if (id && id.type === 'ch1') acquired.add(id.num - 101);
+      }
+    } else {
+      for (const n of evidenceInventory) {
+        const id = invItemId(n);
+        if (id && id.type === 'ch2') acquired.add(id.num - 1);
+      }
+    }
+
+    // Draw white mask over every slot that is NOT acquired
+    evCtx.fillStyle = '#ffffff';
+    for (let i = 0; i < EV_SLOTS.length; i++) {
+      if (acquired.has(i)) continue;
+      const s = EV_SLOTS[i];
+      // Fill the interior only (leave 1px border from background visible)
+      evCtx.fillRect(s.x + 1, s.y + 1, s.w - 2, s.h - 2);
+    }
+  }
+
+  // Resolve the actual filename and numbered-mode for a ch2 item's detail page.
+  // Returns { name:String, numbered:Boolean } where:
+  //   numbered=false → item uses 'han_it_03a' style (unnumbered main, maybe a02 sub)
+  //   numbered=true  → item uses 'han_it_05a1' style (all pages have a digit suffix)
+  async function resolveDetailName(invName, subpage) {
+    const id   = invItemId(invName);
+    const base = invDetailBase(invName);
+    if (!id || !base) return null;
+
+    if (id.type === 'ch1') {
+      // Ch1: 'han_item_107' (main) or 'han_item_1072' (sub 2), 'han_item_1073' etc.
+      const name = subpage > 1 ? `${base}${subpage}` : base;
+      return { name, numbered: false };
+    }
+
+    const v = evidenceSelectPending ? 'h' : 'a';   // testimony vs browse variant
+
+    if (subpage === 1) {
+      // Probe: try unnumbered ('han_it_03a') then numbered-1 ('han_it_05a1')
+      const unnumbered = `${base}${v}`;
+      const img = await loadImg(`assets/sprites/${unnumbered}.jpg`);
+      if (img) return { name: unnumbered, numbered: false };
+      return { name: `${base}${v}1`, numbered: true };
+    }
+
+    // subpage >= 2
+    if (evDetailNumbered) {
+      // Items 05/14/16: pages are a1, a2, a3 ...
+      return { name: `${base}${v}${subpage}`, numbered: true };
+    }
+    // Items 03/27-style: sub-pages use zero-padded 02, 03 suffix
+    return { name: `${base}${v}${String(subpage).padStart(2,'0')}`, numbered: false };
+  }
+
+  async function renderEvItemDetail(invName, subpage) {
+    const resolved = await resolveDetailName(invName, subpage);
+    if (!resolved) return;
+    evCtx.clearRect(0, 0, W, H);
+    let img = await loadImg(`assets/sprites/${resolved.name}.jpg`);
+    if (!img && subpage > 1) {
+      // Sub-page doesn't exist; fall back to page 1
+      const fb = await resolveDetailName(invName, 1);
+      if (fb) img = await loadImg(`assets/sprites/${fb.name}.jpg`);
+    }
+    if (img) evCtx.drawImage(img, 0, 0, W, H);
+    // Persist the numbered/unnumbered mode so next-page navigation uses it
+    if (subpage === 1) evDetailNumbered = resolved.numbered;
+
+    // Show つきつける overlay button only in ch2 testimony mode
+    const presentBtn = document.getElementById('ev-present-btn');
+    if (presentBtn) {
+      presentBtn.style.display =
+        (evidenceSelectPending && getChapterType() !== 'ch1') ? 'block' : 'none';
+    }
+
+    // For ch1 main detail page (subpage=1): show invisible photo click-zone if a _02
+    // photo variant exists for this item.  Currently only han_item_109 has _02.
+    // On sub-pages (2/3/4) or ch2 items the zone is hidden.
+    const photoBtn = document.getElementById('ev-photo-btn');
+    if (photoBtn) {
+      if (getChapterType() === 'ch1' && subpage === 1) {
+        const base = invDetailBase(invName);
+        if (base) {
+          const photoImg = await loadImg(`assets/sprites/${base}_02.jpg`);
+          photoBtn.style.display = photoImg ? 'block' : 'none';
+        } else {
+          photoBtn.style.display = 'none';
+        }
+      } else {
+        photoBtn.style.display = 'none';
+      }
+    }
+  }
+
+  // Character list: han_cha.jpg (page 1), han_cha02.jpg (page 2), han_cha03.jpg (page 3)
+  // Characters within each page are positioned at the same EV_SLOTS grid coordinates.
+  let evCharPage = 1;   // which page of the character list is showing (1, 2, or 3)
+  const CHAR_PAGE_SIZE = EV_SLOTS.length;  // 18 slots per page
+
+  async function renderEvCharList() {
+    const bgName = evCharPage === 1 ? 'han_cha' : `han_cha0${evCharPage}`;
+    const img = await loadImg(`assets/sprites/${bgName}.jpg`);
+    evCtx.clearRect(0, 0, W, H);
+    if (img) evCtx.drawImage(img, 0, 0, W, H);
+    const presentBtn = document.getElementById('ev-present-btn');
+    if (presentBtn) presentBtn.style.display = 'none';
+  }
+
+  async function renderEvCharDetail(charId, subpage) {
+    const suffix = subpage > 1 ? String(subpage).padStart(2,'0') : '';
+    const name   = `han_cha_${charId}${suffix}`;
+    let img = await loadImg(`assets/sprites/${name}.jpg`);
+    if (!img && subpage > 1) img = await loadImg(`assets/sprites/han_cha_${charId}.jpg`);
+    evCtx.clearRect(0, 0, W, H);
+    if (img) evCtx.drawImage(img, 0, 0, W, H);
+  }
+
+  // Composite and draw the coat menu onto its canvas.
+  // evidenceMode=true → show active coatmenu (slot 3 visible); false → off state
+  async function renderCoatMenu(evidenceMode) {
+    const src  = evidenceMode ? ASSET.coatMenu    : ASSET.coatMenuOff;
+    const mask = evidenceMode ? ASSET.coatMenuMask : ASSET.coatMenuOffM;
+    const off  = await compositeToCanvas(src, mask, W, H);
+    coatCtx.clearRect(0, 0, W, H);
+    if (off) coatCtx.drawImage(off, 0, 0);
+    document.getElementById('coat-present').style.display =
+      evidenceMode ? 'block' : 'none';
+  }
+
+  function showCoatMenu() {
+    renderCoatMenu(evidenceSelectPending);
+    coatMenu.style.display = 'block';
+  }
+
+  function hideCoatMenu() {
+    coatMenu.style.display = 'none';
+  }
+
+  async function showEvidenceBook() {
+    evBookView      = 'overview';
+    evDetailItem    = null;
+    evDetailSubpage = 1;
+    evShowingPhoto  = false;
+    evCharDetail    = null;
+    await renderEvBookOverview();
+    const presentBtn = document.getElementById('ev-present-btn');
+    if (presentBtn) presentBtn.style.display = 'none';
+    evBook.style.display = 'block';
+  }
+
+  function hideEvidenceBook() {
+    evBook.style.display = 'none';
+    document.getElementById('ev-present-btn').style.display = 'none';
+    document.getElementById('ev-photo-btn').style.display   = 'none';
+    evShowingPhoto = false;
+  }
+
+  // Called when player clicks つきつける (present evidence button).
+  // Closes both overlays and jumps to the correct-evidence path.
+  function presentEvidence() {
+    hideEvidenceBook();
+    hideCoatMenu();
+    if (evidenceSelectPending && evidenceCorrectCursor >= 0) {
+      evidenceSelectPending = false;
+      evHint.style.display = 'none';   // hide amber hint bar
+      waitingClick = false;
+      waitSource   = null;
+      textbox.style.display = 'none';
+      dialogueEl.textContent = '';
+      clearPortrait();
+      nextTextColor = '#e8eeff';
+      cursor = evidenceCorrectCursor;
+      execute();
+    }
+  }
+
   // ── Sprite compositor ─────────────────────────────
   async function drawSprite(name) {
     const [base, mask] = await Promise.all([
@@ -319,6 +686,7 @@ const VN = (() => {
     hasPortrait = false;
     portraitSide = 'left';
     portCtx.clearRect(0, 0, PORT_W, PORT_H);
+    portCanvas.style.display = 'none';
     portCanvas.style.left  = '0';
     portCanvas.style.right = 'auto';
   }
@@ -361,11 +729,24 @@ const VN = (() => {
       portraitSide = 'right';
       return;
     } else if (n === 'textwinc' || n === 'mind') {
+      // Narrator / inner-monologue frame: no character speaking, clear portrait
+      clearPortrait();
       return;
-    } else if (n === 'han_item' || n.startsWith('han_item')) {
-      // Evidence items — composited onto the dedicated item-canvas (z=3)
-      // so they overlay sprites without erasing them.
+    } else if (n === 'han_item' || /^han_item\d/.test(n)) {
+      // Ch1 evidence items: 'han_item' (clear) or 'han_item107' (show/acquire).
+      // Only acquire bare-number names like han_item107, NOT detail pages han_item_107.
+      if (/^han_item\d/.test(n) && !evidenceInventory.includes(name)) {
+        evidenceInventory.push(name);
+      }
       p = drawItem(name);
+    } else if (/^han_it_\d+[lr]$/i.test(n)) {
+      // Ch2 item scene icons: 'han_it_03l', 'han_it_05r', etc.
+      // In ch2/3 scripts these signal item acquisition; in ch1 scripts (akane/haruka/
+      // mitsuki) they appear as scene decoration sprites without book significance.
+      if (getChapterType() === 'ch2' && !evidenceInventory.includes(name)) {
+        evidenceInventory.push(name);
+      }
+      p = drawSprite(name);   // drawn as a regular sprite at its natural position
     } else if (n.startsWith('nanako')) {
       // Gavel animation frames — only trigger on the first frame; playNanako()
       // handles all 4 frames internally at fixed speed. Subsequent nanako*
@@ -442,8 +823,11 @@ const VN = (() => {
   let charIdx    = 0;
   const TYPE_SPEED = 25;
 
-  function showText(text, jp) {
-    const display = (currentLang !== 'jp' && text && text !== jp) ? text : jp;
+  function showText(text, jp, zh) {
+    let display;
+    if (currentLang === 'cn' && zh && zh !== jp) display = zh;
+    else if (currentLang !== 'jp' && text && text !== jp) display = text;
+    else display = jp;
     // Strip engine formatting codes (!s = PSG centre-line tag, \x07 = bell)
     // Strip leading ideographic spaces (U+3000) from every line — the original
     // text uses them as padding for centring, but we centre via CSS instead.
@@ -496,14 +880,20 @@ const VN = (() => {
           // Skip corrupted binary-extraction artifacts (choice data mis-read as text).
           // These events contain control characters (e.g. \x01, \x00) or replacement
           // chars (U+FFFD) that result from the extractor reading branch tables as UTF-16.
-          const rawJp = ev.jp || '';
+          //
+          // Legitimate PSG in-text codes must be stripped BEFORE the garbage test so they
+          // don't trigger a false positive:
+          //   \x07  — in-text page-break / bell (very common in multi-page lines)
+          //   !s    — centre-align tag
+          //   @     — text pause marker
+          const rawJp = (ev.jp || '').replace(/\x07/g, '').replace(/!s|@/g, '');
           const isGarbage = /[\x00-\x08\x0b\x0c\x0e-\x1f\x7f\ufffd]/.test(rawJp);
           if (isGarbage) break;   // skip silently, continue event loop
 
           const loads = pendingLoads.splice(0);
           const doShow = async () => {
             await renderTextbox();
-            showText(ev.text, ev.jp);
+            showText(ev.text, ev.jp, ev.zh);
             waitSource   = 'text';
             waitingClick = true;
             updateStatus();
@@ -565,6 +955,14 @@ const VN = (() => {
         case 'color_fade':
           // Sets text colour for the next dialogue line.
           nextTextColor = `rgb(${ev.r},${ev.g},${ev.b})`;
+          // val=853009 is the PSG engine's "present evidence" signal.
+          // Compute the correct-evidence cursor now (past all wrong branches)
+          // so the click handler / コート menu can jump there.
+          if (ev.val === 853009) {
+            evidenceSelectPending = true;
+            evidenceCorrectCursor = findEvidenceCorrectCursor(cursor);
+            evHint.style.display = 'block';  // show amber hint bar
+          }
           break;
 
         case 'play_sound':
@@ -616,6 +1014,22 @@ const VN = (() => {
           break;
 
         case 'jump':
+          // Jump to a cursor index (wrong-evidence retry loop).
+          // Only fire if evidence selection is still pending (i.e. the player
+          // has NOT yet presented evidence and explicitly chosen the correct path).
+          // If evidenceSelectPending is false we already jumped to the correct
+          // path, so the wrong branches should be skipped — just fall through.
+          if (ev.target >= 0 && ev.target < events.length) {
+            if (evidenceSelectPending) {
+              // Player hasn't presented evidence yet → retry from target
+              cursor = ev.target;
+              execute();
+              return;
+            }
+            // Otherwise: evidenceSelectPending was cleared by presentEvidence()
+            // which already jumped us to the correct path.  This jump event
+            // should never be reached in that case, but guard just in case.
+          }
           break;
       }
     }
@@ -632,15 +1046,29 @@ const VN = (() => {
       if (!finishTyping()) return;
       playSE('click');    // click-advance sound
       textbox.style.display = 'none';
+      portCanvas.style.display = 'none';  // hide portrait WITH textbox
       dialogueEl.textContent = '';
-      clearPortrait();
+      // Portrait STATE (hasPortrait / currentPortrait) is intentionally kept so
+      // the next text event from the same speaker restores the portrait.
+      // Portrait is only truly reset when textwinc/mind loads (clearPortrait).
       nextTextColor = '#e8eeff';
     }
-    // wait_click: no SE, no portrait clear — just advance scene setup
+    // wait_click: no SE, no portrait change — just advance scene setup
 
     waitingClick = false;
     waitSource   = null;
     execute();
+  });
+
+  // Right-click on game → open coat menu (evidence/notes access)
+  container.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    if (coatMenu.style.display === 'none' || !coatMenu.style.display) {
+      showCoatMenu();
+    } else {
+      hideCoatMenu();
+      hideEvidenceBook();
+    }
   });
 
   document.addEventListener('keydown', e => {
@@ -652,7 +1080,201 @@ const VN = (() => {
       skipping = !skipping;
       if (skipping && waitingClick) container.click();
     }
+    // '1' key → toggle coat menu (matches original PSG engine binding)
+    if (e.code === 'Digit1') {
+      if (coatMenu.style.display === 'none' || !coatMenu.style.display) {
+        showCoatMenu();
+      } else {
+        hideCoatMenu();
+        hideEvidenceBook();
+      }
+    }
   });
+
+  // ── Coat menu button wiring ───────────────────────
+  // ゆさぶる: "shake" — currently a no-op; close the coat menu
+  document.getElementById('coat-yusaburu').onclick = () => {
+    hideCoatMenu();
+    hideEvidenceBook();
+  };
+  // データファイル: open the evidence book
+  document.getElementById('coat-datafile').onclick = () => {
+    showEvidenceBook();
+  };
+  // つきつける: present evidence (only shown when evidenceSelectPending)
+  document.getElementById('coat-present').onclick = () => {
+    presentEvidence();
+  };
+  // 戻る: close coat menu
+  document.getElementById('coat-back').onclick = () => {
+    hideCoatMenu();
+    hideEvidenceBook();
+  };
+  // ── Evidence book canvas click handler ───────────
+  // Handles all navigation: item slots, character tab, close tab, sub-pages, char detail.
+  evBook.addEventListener('click', async e => {
+    e.stopPropagation();
+    const rect = evBook.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (W / rect.width);
+    const my = (e.clientY - rect.top)  * (H / rect.height);
+
+    // Helper: is point inside a tab zone?
+    const hit = z => mx >= z.x && mx < z.x + z.w && my >= z.y && my < z.y + z.h;
+
+    if (evBookView === 'overview') {
+      // 戻る: close the book
+      if (hit(EV_BACKTAB)) { hideEvidenceBook(); return; }
+      // 関係者ファイルへ tab: switch to character page
+      if (hit(EV_SIDETAB)) {
+        evBookView   = 'character';
+        evCharDetail = null;
+        await renderEvCharList();
+        return;
+      }
+      // Item slot click: iterate ALL slots by index; locked slots silently ignore click.
+      const isCh1 = getChapterType() === 'ch1';
+      // Rebuild acquired set (same logic as renderEvBookOverview)
+      const acqSet = new Set();
+      if (isCh1) {
+        acqSet.add(0); acqSet.add(1); acqSet.add(2);
+        for (const n of evidenceInventory) {
+          const id = invItemId(n); if (id && id.type === 'ch1') acqSet.add(id.num - 101);
+        }
+      } else {
+        for (const n of evidenceInventory) {
+          const id = invItemId(n); if (id && id.type === 'ch2') acqSet.add(id.num - 1);
+        }
+      }
+      for (let slotIdx = 0; slotIdx < EV_SLOTS.length; slotIdx++) {
+        const s = EV_SLOTS[slotIdx];
+        if (!(mx >= s.x && mx < s.x + s.w && my >= s.y && my < s.y + s.h)) continue;
+        // Slot hit — only open detail if acquired
+        if (!acqSet.has(slotIdx)) return;  // locked: no response
+        // Build the canonical inventory name for this slot
+        let invName;
+        if (isCh1) {
+          invName = `han_item${slotIdx + 101}`;
+        } else {
+          const itemNum = slotIdx + 1;
+          const numStr  = String(itemNum).padStart(2,'0');
+          // Find the actual inventory entry (could be l or r variant)
+          invName = evidenceInventory.find(n => invItemId(n)?.num === itemNum) ||
+                    `han_it_${numStr}l`;  // fallback synthetic name
+        }
+        evBookView      = 'detail';
+        evDetailItem    = invName;
+        evDetailSubpage = 1;
+        evDetailNumbered = false;
+        await renderEvItemDetail(invName, 1);
+        return;
+      }
+
+    } else if (evBookView === 'detail') {
+      // If the _02 photo overlay is currently shown, any click returns to the detail page.
+      if (evShowingPhoto) {
+        evShowingPhoto = false;
+        await renderEvItemDetail(evDetailItem, evDetailSubpage);
+        return;
+      }
+      // Bottom-right zone: try next sub-page / zoom level
+      if (mx > W * 0.65 && my > H * 0.65) {
+        const nextPage = evDetailSubpage + 1;
+        const resolved = await resolveDetailName(evDetailItem, nextPage);
+        if (resolved) {
+          const img = await loadImg(`assets/sprites/${resolved.name}.jpg`);
+          if (img) {
+            evDetailSubpage = nextPage;
+            await renderEvItemDetail(evDetailItem, nextPage);
+            return;
+          }
+        }
+      }
+      // Top-left zone on sub-page: go back to page 1
+      if (evDetailSubpage > 1 && mx < W * 0.3 && my < H * 0.3) {
+        evDetailSubpage = 1;
+        await renderEvItemDetail(evDetailItem, 1);
+        return;
+      }
+      // Anywhere else: back to overview
+      evBookView       = 'overview';
+      evDetailItem     = null;
+      evDetailSubpage  = 1;
+      evDetailNumbered = false;
+      document.getElementById('ev-present-btn').style.display = 'none';
+      document.getElementById('ev-photo-btn').style.display   = 'none';
+      await renderEvBookOverview();
+
+    } else if (evBookView === 'character') {
+      // 証拠品一覧へ tab: return to evidence overview
+      if (hit(EV_SIDETAB)) {
+        evBookView = 'overview';
+        evCharPage = 1;
+        await renderEvBookOverview();
+        return;
+      }
+      // 戻る at top-right: close book entirely
+      if (hit(EV_BACKTAB)) { hideEvidenceBook(); return; }
+      // Character slot click — offset by current page
+      const charOffset = (evCharPage - 1) * CHAR_PAGE_SIZE;
+      for (let i = 0; i < EV_SLOTS.length; i++) {
+        const s = EV_SLOTS[i];
+        if (mx >= s.x && mx < s.x + s.w && my >= s.y && my < s.y + s.h) {
+          const charIdx = charOffset + i;
+          if (charIdx < CHAR_IDS.length && CHAR_IDS[charIdx] !== null) {
+            evBookView    = 'chardetail';
+            evCharDetail  = CHAR_IDS[charIdx];
+            evCharSubpage = 1;
+            await renderEvCharDetail(CHAR_IDS[charIdx], 1);
+          }
+          return;
+        }
+      }
+
+    } else if (evBookView === 'chardetail') {
+      // Bottom-right: advance to next sub-page if it exists
+      if (mx > W * 0.65 && my > H * 0.65) {
+        const nextSub = evCharSubpage + 1;
+        if (evCharDetail && nextSub <= charMaxPage(evCharDetail)) {
+          evCharSubpage = nextSub;
+          await renderEvCharDetail(evCharDetail, nextSub);
+          return;
+        }
+      }
+      // Top-left: go back to sub-page 1
+      if (evCharSubpage > 1 && mx < W * 0.3 && my < H * 0.3) {
+        evCharSubpage = 1;
+        await renderEvCharDetail(evCharDetail, 1);
+        return;
+      }
+      // Anywhere else: back to character list
+      evBookView    = 'character';
+      evCharDetail  = null;
+      evCharSubpage = 1;
+      await renderEvCharList();
+    }
+  });
+
+  // ev-present-btn: つきつける button shown on ch2 item detail in testimony mode
+  document.getElementById('ev-present-btn').onclick = e => {
+    e.stopPropagation();
+    presentEvidence();
+  };
+
+  // ev-photo-btn: transparent click-zone positioned over the cyan text in ch1 item
+  // detail pages.  Clicking it shows the _02 photo overlay (han_item_109_02.jpg).
+  // After the photo is shown, any canvas click returns to the item detail page.
+  document.getElementById('ev-photo-btn').onclick = async e => {
+    e.stopPropagation();
+    const base = invDetailBase(evDetailItem);
+    if (!base) return;
+    const photoSrc = `assets/sprites/${base}_02.jpg`;
+    const img = await loadImg(photoSrc);
+    if (!img) return;
+    evCtx.clearRect(0, 0, W, H);
+    evCtx.drawImage(img, 0, 0, W, H);
+    e.target.style.display = 'none';
+    evShowingPhoto = true;   // flag: next canvas click → back to detail (not overview)
+  };
 
   // ── Choice menu ───────────────────────────────────
   function showChoiceMenu(choices) {
@@ -674,6 +1296,7 @@ const VN = (() => {
 
   // ── Script loader ─────────────────────────────────
   async function loadScript(name) {
+    currentScript = name;
     updateStatus(`Loading ${name}...`);
     // Clear all canvases so no previous scene bleeds into the new script
     bgCtx.clearRect(0, 0, W, H);
@@ -690,6 +1313,20 @@ const VN = (() => {
     clearTimeout(nanakoTimer);
     clearPortrait();          // also resets portraitSide → 'left'
     hideUIOverlay();
+    hideCoatMenu();
+    hideEvidenceBook();
+    evidenceSelectPending = false;
+    evidenceCorrectCursor = -1;
+    evidenceInventory     = [];
+    evBookView       = 'overview';
+    evDetailItem     = null;
+    evDetailSubpage  = 1;
+    evDetailNumbered = false;
+    evShowingPhoto   = false;
+    evCharDetail     = null;
+    evCharSubpage    = 1;
+    evCharPage       = 1;
+    evHint.style.display  = 'none';
     nextTextColor = '#e8eeff';
     try {
       const res = await fetch(`scripts/${name}.json`);
@@ -732,6 +1369,20 @@ const VN = (() => {
       clearTimeout(nanakoTimer);
       clearPortrait();
       hideUIOverlay();
+      hideCoatMenu();
+      hideEvidenceBook();
+      evidenceSelectPending = false;
+      evidenceCorrectCursor = -1;
+      evidenceInventory     = [];
+      evBookView       = 'overview';
+      evDetailItem     = null;
+      evDetailSubpage  = 1;
+      evDetailNumbered = false;
+      evShowingPhoto   = false;
+      evCharDetail     = null;
+      evCharSubpage    = 1;
+      evCharPage       = 1;
+      evHint.style.display  = 'none';
       events = []; cursor = 0; waitingClick = false; waitSource = null;
       if (window._showMenu) window._showMenu();
     },

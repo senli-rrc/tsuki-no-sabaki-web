@@ -32,7 +32,7 @@ z-index 10  #fade-overlay         Black fade div
 z-index  5  #textbox div
                └── #textbox-canvas  640×150  Dialogue frame (composited)
                └── #dialogue-area   Text + click indicator (HTML)
-z-index  4  #portrait-canvas      165×200  Face portrait
+z-index  4  #portrait-canvas      168×200  Face portrait
 z-index  2  #sprite-canvas        640×480  Full-body character sprites
 z-index  1  #bg-canvas            640×480  Background images
 ```
@@ -41,7 +41,16 @@ z-index  1  #bg-canvas            640×480  Background images
 
 The portrait canvas is intentionally **200 px tall** while the textbox frame is **150 px tall**. Both are bottom-anchored (`bottom: 0`). This makes the top 50 px of the portrait canvas extend above the frame, giving the "character head pokes above the dialogue box" look of the original game.
 
-The portrait canvas has `z-index: 4` (above sprites, below textbox). The left 165 px of the textbox canvas are always **transparent** (no frame drawn there), so the portrait shows through correctly.
+The portrait canvas has `z-index: 4` (above sprites, below textbox). The left 168 px of the textbox canvas are always **transparent** (no frame drawn there), so the portrait shows through correctly.
+
+### Portrait canvas visibility
+
+`#portrait-canvas` visibility is kept in sync with `#textbox` at all times:
+- `renderTextbox()` sets `portCanvas.style.display = ''` (character mode) or `'none'` (narrator mode).
+- The click-advance handler sets `portCanvas.style.display = 'none'` together with hiding `#textbox`.
+- `clearPortrait()` also sets `display: none`.
+
+The **portrait state** (`hasPortrait`, `currentPortrait`) is intentionally **not** cleared on text-advance. It persists so the next text event from the same speaker can restore the portrait without a new `load_image`. State is cleared only when `textwinc`/`mind` loads or on script/scene reset.
 
 ---
 
@@ -61,10 +70,10 @@ The portrait canvas has `z-index: 4` (above sprites, below textbox). The left 16
 ### `waitSource` flag
 
 Two events cause the engine to wait for a click:
-- `text` — dialogue line is displayed; clicking should **advance** (clear portrait, hide textbox)
-- `wait_click` — scene setup pause; clicking should **not** clear the portrait
+- `text` — dialogue line is displayed; clicking hides `#textbox` and `#portrait-canvas` but does **not** call `clearPortrait()`. Portrait state is preserved for the next line.
+- `wait_click` — scene setup pause; clicking advances with no visual change.
 
-The `waitSource` string (`'text'` or `'wait_click'`) is checked in the click handler to decide whether to call `clearPortrait()`.
+The `waitSource` string (`'text'` or `'wait_click'`) is checked in the click handler.
 
 ---
 
@@ -124,7 +133,7 @@ The colour is stored in `nextTextColor` and applied to `#dialogue-text` when `sh
 
 | `hasPortrait` | Frame | Canvas x | Text area |
 |--------------|-------|----------|-----------|
-| `true` | `assets/ui/textwins.jpg` (470×150, right decorative border) | x = 170 | left: 188px, right: 18px, left-aligned |
+| `true` | `assets/ui/textwins.jpg` (472×150, right decorative border) | x = 168 | left: 188px, right: 18px, left-aligned |
 | `false` | `assets/sprites/textwinc.jpg` (620×150, both borders, stretched to 640) | x = 0 | left: 30px, right: 30px, centered |
 
 Each frame image has a paired grayscale mask (`*_.jpg` in `assets/sprites/`) whose R-channel is applied as alpha to make the frame semi-transparent.
@@ -139,6 +148,37 @@ Each frame image has a paired grayscale mask (`*_.jpg` in `assets/sprites/`) who
 
 ---
 
+## Simplified Chinese translation
+
+Each `text` event in `webapp/scripts/*.json` may carry an optional `zh` field:
+
+```json
+{ "op": "text", "jp": "…", "text": "…", "zh": "…", "offset": 123 }
+```
+
+`showText(text, jp, zh)` selects the field to display based on `currentLang`:
+- `cn` → `zh` (if present and non-empty), else `jp`
+- `en` → `text` (if differs from `jp`), else `jp`
+- `jp` → `jp`
+
+### Formatting codes in zh
+
+The PSG engine embeds control codes inside dialogue strings. These are stripped by `showText()` before display but must be **preserved** in the `zh` field so the engine's stripping logic works consistently:
+
+| Code | Meaning | In zh field |
+|------|---------|-------------|
+| `\x07` | In-text page-break / bell | Keep as `\x07` (not `x07`) |
+| `!s` | Centre-align tag | Keep as `!s` |
+| `@` | Text pause | Keep as `@` |
+
+The translation tool (`tools/translate_zh.py`) uses placeholder substitution to protect these codes during API calls.
+
+### Garbage filter
+
+`text` events whose `jp` field contains binary extraction artifacts (null bytes, replacement chars, etc.) are silently skipped. **`\x07` is explicitly stripped before this test** to avoid false positives — ~31% of all dialogue events contain `\x07`.
+
+---
+
 ## Known limitations / future work
 
 | Area | Status |
@@ -146,5 +186,4 @@ Each frame image has a paired grayscale mask (`*_.jpg` in `assets/sprites/`) who
 | Video playback | MPG files not browser-compatible; needs ffmpeg conversion + `<video>` integration |
 | Save / Load | Not implemented |
 | `set_flag` / branching flags | Events parsed but values not tracked |
-| Translation UI | `translation/` directory exists; `reinsert_text.py` does reinsertion but no in-browser UI |
 | `load_ui mind` | `mind.jpg` is a 640×480 thought overlay — not yet rendered |
