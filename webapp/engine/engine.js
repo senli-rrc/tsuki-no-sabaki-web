@@ -16,7 +16,9 @@ const VN = (() => {
   const dialogueArea= document.getElementById('dialogue-area');
   const clickInd    = document.getElementById('click-indicator');
   const fadeOverlay = document.getElementById('fade-overlay');
-  const choiceMenu  = document.getElementById('choice-menu');
+  const choiceMenu      = document.getElementById('choice-menu');
+  const evidenceOverlay = document.getElementById('evidence-overlay');
+  const evidenceImg     = document.getElementById('evidence-img');
   const uiOverlay   = document.getElementById('ui-overlay');
   const uiImg       = document.getElementById('ui-img');
   const statusEl    = document.getElementById('status');
@@ -260,6 +262,19 @@ const VN = (() => {
     uiOverlay.style.display = 'none';
   }
 
+  // ── Evidence overlay ──────────────────────────────
+  function showEvidence(name) {
+    // name like 'han_item107' → show in top-left overlay box
+    evidenceImg.src = ASSET.sprite(name);
+    evidenceImg.onerror = () => {};
+    evidenceOverlay.style.display = 'block';
+  }
+
+  function clearEvidence() {
+    evidenceOverlay.style.display = 'none';
+    evidenceImg.src = '';
+  }
+
   // ── Image dispatch ────────────────────────────────
   function loadImage(name) {
     if (!name) return;
@@ -268,7 +283,23 @@ const VN = (() => {
     if (n.startsWith('han_bg') || n === 'blk' || n === 'blood' ||
         n.startsWith('adventure')) {
       p = drawBackground(name);
-    } else if (n === 'textwins' || n === 'textwinc' || n === 'l_wins' || n === 'mind') {
+    } else if (n === 'textwins') {
+      // Dialogue frame switch: character speaking on left side
+      portraitSide = 'left';
+      return;
+    } else if (n === 'l_wins') {
+      // Dialogue frame switch: prosecutor/judge speaking, portrait on right
+      portraitSide = 'right';
+      return;
+    } else if (n === 'textwinc' || n === 'mind') {
+      return;
+    } else if (n === 'han_item') {
+      // Bare 'han_item' = hide evidence display
+      clearEvidence();
+      return;
+    } else if (n.startsWith('han_item')) {
+      // Numbered evidence item (han_item104…han_item113) = show in overlay
+      showEvidence(name);
       return;
     } else if (n.startsWith('han_') && n.endsWith('f')) {
       p = setPortrait(name);
@@ -582,6 +613,7 @@ const VN = (() => {
     pendingLoads = [];
     clearPortrait();          // also resets portraitSide → 'left'
     hideUIOverlay();
+    clearEvidence();
     nextTextColor = '#e8eeff';
     try {
       const res = await fetch(`scripts/${name}.json`);
@@ -622,6 +654,7 @@ const VN = (() => {
       tbCtx.clearRect(0, 0, W, TB_H);
       clearPortrait();
       hideUIOverlay();
+      clearEvidence();
       events = []; cursor = 0; waitingClick = false; waitSource = null;
       if (window._showMenu) window._showMenu();
     },

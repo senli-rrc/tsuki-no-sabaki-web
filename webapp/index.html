@@ -227,6 +227,18 @@
   </div>
 
   <div id="fade-overlay"></div>
+  <!-- Evidence display — top-left corner, z=14, below testimony UI(15) -->
+  <div id="evidence-overlay"
+       style="position:absolute;top:8px;left:8px;
+              width:160px;height:160px;z-index:14;
+              display:none;pointer-events:none;
+              background:#d0cfc8;border:3px solid #888;
+              box-shadow:2px 2px 6px rgba(0,0,0,0.5);">
+    <img id="evidence-img"
+         style="width:154px;height:154px;object-fit:contain;display:block;"
+         alt="">
+  </div>
+
   <!-- Testimony / action UI overlay — sits above fade(10) but below choice(20) -->
   <div id="ui-overlay"
        style="position:absolute;top:0;left:0;width:640px;height:480px;
