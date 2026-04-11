@@ -490,6 +490,11 @@ const VN = (() => {
           } else if (/^han_m1[0-4]$/.test(uiName)) {
             // Brief action markers (han_m10–han_m14, auto-hide after 1 s)
             showUIOverlay(uiName, 1000);
+          } else if (uiName === 'mind') {
+            // Switch to protagonist internal-thought mode.
+            // The original engine clears the evidence/item layer when entering
+            // this mode (physical objects are not shown during inner monologue).
+            itemCtx.clearRect(0, 0, W, H);
           }
           // han_m27 (navigation map) and all other load_ui names: ignore
           break;
