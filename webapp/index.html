@@ -212,6 +212,10 @@
 <div id="game-container" class="screen">
   <canvas id="bg-canvas"     width="640" height="480"></canvas>
   <canvas id="sprite-canvas" width="640" height="480"></canvas>
+  <!-- Evidence / item layer — composited over sprites, under portrait -->
+  <canvas id="item-canvas"   width="640" height="480"
+          style="position:absolute;top:0;left:0;width:640px;height:480px;
+                 z-index:3;pointer-events:none;"></canvas>
   <!-- Portrait canvas sits above sprites but below the textbox frame;
        200px tall so the head pokes above the 150px frame -->
   <canvas id="portrait-canvas" width="165" height="200"
@@ -227,18 +231,6 @@
   </div>
 
   <div id="fade-overlay"></div>
-  <!-- Evidence display — top-left corner, z=14, below testimony UI(15) -->
-  <div id="evidence-overlay"
-       style="position:absolute;top:8px;left:8px;
-              width:160px;height:160px;z-index:14;
-              display:none;pointer-events:none;
-              background:#d0cfc8;border:3px solid #888;
-              box-shadow:2px 2px 6px rgba(0,0,0,0.5);">
-    <img id="evidence-img"
-         style="width:154px;height:154px;object-fit:contain;display:block;"
-         alt="">
-  </div>
-
   <!-- Testimony / action UI overlay — sits above fade(10) but below choice(20) -->
   <div id="ui-overlay"
        style="position:absolute;top:0;left:0;width:640px;height:480px;

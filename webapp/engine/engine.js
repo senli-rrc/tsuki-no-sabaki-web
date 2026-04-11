@@ -5,10 +5,12 @@ const VN = (() => {
   const container   = document.getElementById('game-container');
   const bgCanvas    = document.getElementById('bg-canvas');
   const sprCanvas   = document.getElementById('sprite-canvas');
+  const itemCanvas  = document.getElementById('item-canvas');
   const portCanvas  = document.getElementById('portrait-canvas');
   const tbCanvas    = document.getElementById('textbox-canvas');
   const bgCtx       = bgCanvas.getContext('2d');
   const sprCtx      = sprCanvas.getContext('2d');
+  const itemCtx     = itemCanvas.getContext('2d');
   const portCtx     = portCanvas.getContext('2d');
   const tbCtx       = tbCanvas.getContext('2d');
   const textbox     = document.getElementById('textbox');
@@ -16,9 +18,7 @@ const VN = (() => {
   const dialogueArea= document.getElementById('dialogue-area');
   const clickInd    = document.getElementById('click-indicator');
   const fadeOverlay = document.getElementById('fade-overlay');
-  const choiceMenu      = document.getElementById('choice-menu');
-  const evidenceOverlay = document.getElementById('evidence-overlay');
-  const evidenceImg     = document.getElementById('evidence-img');
+  const choiceMenu  = document.getElementById('choice-menu');
   const uiOverlay   = document.getElementById('ui-overlay');
   const uiImg       = document.getElementById('ui-img');
   const statusEl    = document.getElementById('status');
@@ -181,6 +181,42 @@ const VN = (() => {
     }
   }
 
+  // ── Evidence item compositor ──────────────────────
+  // han_item* are 640×480 full-frame composites (image + R-channel mask).
+  // They sit on the dedicated item-canvas so they overlay sprites without
+  // clearing them. han_item (no number) clears the item layer.
+  async function drawItem(name) {
+    const n = name.toLowerCase();
+    if (n === 'han_item') {
+      // Clear evidence layer
+      itemCtx.clearRect(0, 0, W, H);
+      return;
+    }
+    const [base, mask] = await Promise.all([
+      loadImg(ASSET.sprite(name)), loadImg(ASSET.mask(name)),
+    ]);
+    itemCtx.clearRect(0, 0, W, H);
+    if (!base) return;
+    if (!mask) { itemCtx.drawImage(base, 0, 0, W, H); return; }
+
+    const off = document.createElement('canvas');
+    off.width = W; off.height = H;
+    const offCtx = off.getContext('2d');
+    offCtx.drawImage(base, 0, 0, W, H);
+    const bd = offCtx.getImageData(0, 0, W, H);
+
+    const mOff = document.createElement('canvas');
+    mOff.width = W; mOff.height = H;
+    const mCtx = mOff.getContext('2d');
+    mCtx.drawImage(mask, 0, 0, W, H);
+    const md = mCtx.getImageData(0, 0, W, H);
+
+    for (let i = 0; i < bd.data.length; i += 4)
+      bd.data[i + 3] = md.data[i];
+    offCtx.putImageData(bd, 0, 0);
+    itemCtx.drawImage(off, 0, 0);
+  }
+
   // ── Sprite compositor ─────────────────────────────
   async function drawSprite(name) {
     const [base, mask] = await Promise.all([
@@ -262,19 +298,6 @@ const VN = (() => {
     uiOverlay.style.display = 'none';
   }
 
-  // ── Evidence overlay ──────────────────────────────
-  function showEvidence(name) {
-    // name like 'han_item107' → show in top-left overlay box
-    evidenceImg.src = ASSET.sprite(name);
-    evidenceImg.onerror = () => {};
-    evidenceOverlay.style.display = 'block';
-  }
-
-  function clearEvidence() {
-    evidenceOverlay.style.display = 'none';
-    evidenceImg.src = '';
-  }
-
   // ── Image dispatch ────────────────────────────────
   function loadImage(name) {
     if (!name) return;
@@ -293,14 +316,10 @@ const VN = (() => {
       return;
     } else if (n === 'textwinc' || n === 'mind') {
       return;
-    } else if (n === 'han_item') {
-      // Bare 'han_item' = hide evidence display
-      clearEvidence();
-      return;
-    } else if (n.startsWith('han_item')) {
-      // Numbered evidence item (han_item104…han_item113) = show in overlay
-      showEvidence(name);
-      return;
+    } else if (n === 'han_item' || n.startsWith('han_item')) {
+      // Evidence items — composited onto the dedicated item-canvas (z=3)
+      // so they overlay sprites without erasing them.
+      p = drawItem(name);
     } else if (n.startsWith('han_') && n.endsWith('f')) {
       p = setPortrait(name);
     } else {
@@ -603,6 +622,7 @@ const VN = (() => {
     // Clear all canvases so no previous scene bleeds into the new script
     bgCtx.clearRect(0, 0, W, H);
     sprCtx.clearRect(0, 0, W, H);
+    itemCtx.clearRect(0, 0, W, H);
     textbox.style.display = 'none';
     tbCtx.clearRect(0, 0, W, TB_H);
     choiceMenu.style.display = 'none';
@@ -613,7 +633,6 @@ const VN = (() => {
     pendingLoads = [];
     clearPortrait();          // also resets portraitSide → 'left'
     hideUIOverlay();
-    clearEvidence();
     nextTextColor = '#e8eeff';
     try {
       const res = await fetch(`scripts/${name}.json`);
@@ -651,10 +670,10 @@ const VN = (() => {
       textbox.style.display = 'none';
       bgCtx.clearRect(0, 0, W, H);
       sprCtx.clearRect(0, 0, W, H);
+      itemCtx.clearRect(0, 0, W, H);
       tbCtx.clearRect(0, 0, W, TB_H);
       clearPortrait();
       hideUIOverlay();
-      clearEvidence();
       events = []; cursor = 0; waitingClick = false; waitSource = null;
       if (window._showMenu) window._showMenu();
     },
