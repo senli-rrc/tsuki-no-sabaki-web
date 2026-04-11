@@ -49,11 +49,13 @@ const VN = (() => {
   let nextTextColor = '#e8eeff';
   let pendingLoads  = [];
   let uiTimer       = null;
+  let nanakoTimer   = null;
 
   // ── Asset paths ───────────────────────────────────
   const ASSET = {
     bg:            name => `assets/bg/${name}.jpg`,
     sprite:        name => `assets/sprites/${name}.jpg`,
+    nanako:        i    => `assets/sprites/nanako0${i}.png`,
     mask:          name => `assets/sprites/${name}_.jpg`,
     bgm:           name => `assets/bgm/${name}.mp3`,
     se:            name => `assets/se/${name}.wav`,
@@ -106,6 +108,8 @@ const VN = (() => {
   loadImg(ASSET.frameWith);  loadImg(ASSET.frameWithMask);
   loadImg(ASSET.frameLeft);  loadImg(ASSET.frameLeftMask);
   loadImg(ASSET.frameNo);    loadImg(ASSET.frameNoMask);
+  // Preload nanako gavel animation frames
+  [1,2,3,4].forEach(i => loadImg(ASSET.nanako(i)));
 
   // ── Canvas compositing ────────────────────────────
   async function compositeToCanvas(srcUrl, maskUrl, dstW, dstH, srcCropW, srcCropH) {
@@ -184,7 +188,31 @@ const VN = (() => {
     }
   }
 
-  // ── Evidence item compositor ──────────────────────
+  // ── Nanako gavel animation ────────────────────────
+  // nanako01-04 are 640×480 BMP frames (renamed .jpg, converted to .png).
+  // The script cycles them with fade:1 between each, but async drawSprite()
+  // is too slow. Instead we detect the first frame and immediately play all
+  // 4 at ~80 ms/frame on sprCtx, matching the original engine speed.
+  function playNanako() {
+    clearTimeout(nanakoTimer);
+    let frame = 1;
+    const FRAME_MS = 80;   // ~12 fps; original felt snappy, not slow-motion
+
+    async function showFrame() {
+      const img = await loadImg(ASSET.nanako(frame));
+      if (img) {
+        sprCtx.clearRect(0, 0, W, H);
+        sprCtx.drawImage(img, 0, 0, W, H);
+      }
+      frame++;
+      if (frame <= 4) {
+        nanakoTimer = setTimeout(showFrame, FRAME_MS);
+      }
+      // After frame 4, leave the last frame on sprCtx; the script will load
+      // han_bg04 shortly after which clears sprCtx via drawBackground.
+    }
+    showFrame();
+  }
   // han_item* are 640×480 full-frame composites (image + R-channel mask).
   // They sit on the dedicated item-canvas so they overlay sprites without
   // clearing them. han_item (no number) clears the item layer.
@@ -338,6 +366,12 @@ const VN = (() => {
       // Evidence items — composited onto the dedicated item-canvas (z=3)
       // so they overlay sprites without erasing them.
       p = drawItem(name);
+    } else if (n.startsWith('nanako')) {
+      // Gavel animation frames — only trigger on the first frame; playNanako()
+      // handles all 4 frames internally at fixed speed. Subsequent nanako*
+      // load_image events (02-04) are no-ops here to avoid double-drawing.
+      if (n === 'nanako01') playNanako();
+      return;
     } else if (n.startsWith('han_') && n.endsWith('f')) {
       p = setPortrait(name);
     } else {
@@ -653,6 +687,7 @@ const VN = (() => {
     fadeOverlay.style.transition = 'none';
     fadeOverlay.style.opacity    = '1';
     pendingLoads = [];
+    clearTimeout(nanakoTimer);
     clearPortrait();          // also resets portraitSide → 'left'
     hideUIOverlay();
     nextTextColor = '#e8eeff';
@@ -694,6 +729,7 @@ const VN = (() => {
       sprCtx.clearRect(0, 0, W, H);
       clearItemCanvas();
       tbCtx.clearRect(0, 0, W, TB_H);
+      clearTimeout(nanakoTimer);
       clearPortrait();
       hideUIOverlay();
       events = []; cursor = 0; waitingClick = false; waitSource = null;
