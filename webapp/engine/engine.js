@@ -43,6 +43,9 @@ const VN = (() => {
   let hasPortrait   = false;
   let currentPortrait = null;
   let portraitSide  = 'left';  // 'left' (textwins) | 'right' (l_wins)
+  let itemGen       = 0;       // incremented on every item-canvas clear; used to
+                               // cancel async drawItem() calls that were queued
+                               // before a clear signal (mind / background / script)
   let nextTextColor = '#e8eeff';
   let pendingLoads  = [];
   let uiTimer       = null;
@@ -185,16 +188,30 @@ const VN = (() => {
   // han_item* are 640×480 full-frame composites (image + R-channel mask).
   // They sit on the dedicated item-canvas so they overlay sprites without
   // clearing them. han_item (no number) clears the item layer.
+  //
+  // itemGen solves the async race condition:
+  //   load_ui mind / background change / loadScript all call clearItemCanvas()
+  //   which increments itemGen synchronously. Any async drawItem() that started
+  //   before the clear checks the generation on completion; if itemGen changed,
+  //   the clear happened while we were loading — discard the draw.
+  function clearItemCanvas() {
+    itemGen++;
+    itemCtx.clearRect(0, 0, W, H);
+  }
+
   async function drawItem(name) {
     const n = name.toLowerCase();
     if (n === 'han_item') {
-      // Clear evidence layer
-      itemCtx.clearRect(0, 0, W, H);
+      clearItemCanvas();
       return;
     }
+    const myGen = itemGen;  // capture generation at dispatch time
     const [base, mask] = await Promise.all([
       loadImg(ASSET.sprite(name)), loadImg(ASSET.mask(name)),
     ]);
+    // If a clear happened while we were loading images, discard this draw.
+    if (itemGen !== myGen) return;
+
     itemCtx.clearRect(0, 0, W, H);
     if (!base) return;
     if (!mask) { itemCtx.drawImage(base, 0, 0, W, H); return; }
@@ -251,9 +268,6 @@ const VN = (() => {
     const img = await loadImg(ASSET.bg(name));
     if (!img) return;
     bgCtx.clearRect(0, 0, W, H);
-    // Scene change: clear the evidence item layer so items from the
-    // previous location don't bleed into the new scene.
-    itemCtx.clearRect(0, 0, W, H);
     const scale = Math.max(W / img.naturalWidth, H / img.naturalHeight);
     const dw = img.naturalWidth * scale, dh = img.naturalHeight * scale;
     bgCtx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
@@ -308,6 +322,7 @@ const VN = (() => {
     let p;
     if (n.startsWith('han_bg') || n === 'blk' || n === 'blood' ||
         n.startsWith('adventure')) {
+      clearItemCanvas();   // synchronous: increment gen before async draw starts
       p = drawBackground(name);
     } else if (n === 'textwins') {
       // Dialogue frame switch: character speaking on left side
@@ -495,9 +510,8 @@ const VN = (() => {
             showUIOverlay(uiName, 1000);
           } else if (uiName === 'mind') {
             // Switch to protagonist internal-thought mode.
-            // The original engine clears the evidence/item layer when entering
-            // this mode (physical objects are not shown during inner monologue).
-            itemCtx.clearRect(0, 0, W, H);
+            // Physical evidence is not shown during inner monologue.
+            clearItemCanvas();
           }
           // han_m27 (navigation map) and all other load_ui names: ignore
           break;
@@ -630,7 +644,7 @@ const VN = (() => {
     // Clear all canvases so no previous scene bleeds into the new script
     bgCtx.clearRect(0, 0, W, H);
     sprCtx.clearRect(0, 0, W, H);
-    itemCtx.clearRect(0, 0, W, H);
+    clearItemCanvas();
     textbox.style.display = 'none';
     tbCtx.clearRect(0, 0, W, TB_H);
     choiceMenu.style.display = 'none';
@@ -678,7 +692,7 @@ const VN = (() => {
       textbox.style.display = 'none';
       bgCtx.clearRect(0, 0, W, H);
       sprCtx.clearRect(0, 0, W, H);
-      itemCtx.clearRect(0, 0, W, H);
+      clearItemCanvas();
       tbCtx.clearRect(0, 0, W, TB_H);
       clearPortrait();
       hideUIOverlay();
