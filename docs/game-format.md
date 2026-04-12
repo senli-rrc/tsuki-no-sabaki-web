@@ -30,6 +30,12 @@ game/
     └── …
 ```
 
+The extracted files live at:
+```
+extracted/game/Program_Executable_Files/data/*.scr   ← binary scripts (already present)
+```
+`tools/build_webapp.py` reads from this path directly (`GAME_DIR = BASE / "extracted/game/Program_Executable_Files"`).
+
 ---
 
 ## Script format (binary → JSON)
@@ -51,7 +57,7 @@ Game scripts are stored as binary files in `extracted/game/scenario/`. The PSG e
 | `40` | `wait` | Delay (frame count) |
 | `41` | `wait_click` | Wait for player click (scene-setup pause) |
 | `50` | `set_flag` | Set a game flag variable |
-| `60` | `choice_begin` | Show branch choice menu |
+| `60` (`0x23 0x04`) | `choice_begin` | Show branch choice menu; followed by choice strings + jump targets |
 | `70` | `goto_script` | Jump to another script file |
 
 ### Extracted JSON format
@@ -157,7 +163,23 @@ The web engine uses the `text` field when Language is set to a non-JP option; it
 | Script | Chapter / Scene |
 |--------|----------------|
 | `main.json`, `main2.json` | Title / opening |
-| `s02_01` – `s02_27` | Chapter 1 (はじめての反転) + Chapter 2 (反転姉妹) |
-| `s03_01` – `s03_06` | Chapter 3 (反転、そしてサヨナラ) |
+| `akane.json` → `haruka.json` → `mitsuki.json` | Chapter 1 — 月ノ裁き (linked via goto_script) |
+| `s02_01` – `s02_11`, `s02_20` – `s02_27` | Chapter 2 — 反転姉妹 |
+| `s03_01` – `s03_06` | Chapter 3 — 反転、そしてサヨナラ |
 | `gameover.json` | Bad ending |
-| `karen.json`, `haruka.json`, `mitsuki.json`, `akane.json`, `sakuya.json`, `ciel.json` | Character-specific routes |
+| `karen.json`, `sakuya.json`, `ciel.json` | Character-specific sub-routes |
+
+---
+
+## Known extraction gaps
+
+### Trailing garbage events
+Near the end of `akane.scr`, `haruka.scr`, and `mitsuki.scr` the extractor misidentifies non-dialogue binary data (jump tables, alignment padding) as text events. These produce garbled characters like `弖`, `鏃`, `б`. They are either caught by the garbage filter (if they contain bytes in `[\x00-\x08]`) or displayed briefly at the very end of the script. They do not affect normal playthrough since the scripts end via `goto_script` before reaching them.
+
+### choice_begin — missing choice text
+The `choice_begin` opcode (`0x23 0x04`) is detected, but `build_webapp.py` only advances 4 bytes past it without parsing the choice strings and jump targets that follow. As a result most `choice_begin` events in the JSON have no `choices` array. `akane.json` is an exception — it was previously fixed manually.
+
+To fix: inspect the bytes immediately after `0x23 0x04` in a `.scr` file (e.g. `karen.scr` which has 27 choice points) to determine the choice entry format (likely: count byte, then N × [Shift-JIS string + 4-byte jump offset]), then update `decode_script()` in `build_webapp.py` accordingly. The `.scr` source files are at:
+```
+extracted/game/Program_Executable_Files/data/*.scr
+```

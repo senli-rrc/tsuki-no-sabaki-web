@@ -50,6 +50,13 @@ No build step. Edit source files and hard-refresh the browser (`Cmd+Shift+R`).
 │   ├── translate_zh.py        # JP → Simplified Chinese translation via AI API
 │   ├── reinsert_text.py       # Writes translated text back into JSON scripts
 │   └── build_webapp.py        # Orchestrates the full extraction → webapp pipeline
+├── extracted/                 # ⚠ NOT in git — original game files extracted from disc image
+│   └── game/
+│       └── Program_Executable_Files/
+│           └── data/          # Binary script files (.scr) — source for build_webapp.py
+│               ├── akane.scr
+│               ├── haruka.scr
+│               └── …          # one .scr per script, same names as webapp/scripts/*.json
 ├── translation/
 │   └── strings.json           # 14 723-line source/translation table (JP original + EN placeholder)
 └── docs/
@@ -236,8 +243,16 @@ ffmpeg -i webapp/assets/video/han_mov01.mpg -c:v libx264 -crf 23 \
        -c:a aac webapp/assets/video/han_mov01.mp4
 ```
 
-### Run the extraction pipeline from scratch
-See `docs/setup.md` — requires original disc image and the Python tools.
+### Re-run the extraction pipeline
+Binary `.scr` source files are already present at:
+```
+extracted/game/Program_Executable_Files/data/*.scr
+```
+To regenerate all `webapp/scripts/*.json` from them:
+```bash
+python3 tools/build_webapp.py
+```
+See `docs/setup.md` if starting from scratch (requires original disc image).
 
 ---
 
