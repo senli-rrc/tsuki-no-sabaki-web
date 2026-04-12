@@ -3427,15 +3427,18 @@
       "choices": [
         {
           "text": "俺",
-          "target_cursor": 753
+          "target_cursor": 753,
+          "zh": "我"
         },
         {
           "text": "アルクェイド",
-          "target_cursor": 922
+          "target_cursor": 922,
+          "zh": "阿尔克艾德"
         },
         {
           "text": "琥珀さん",
-          "target_cursor": 842
+          "target_cursor": 842,
+          "zh": "琥珀女士"
         }
       ]
     },
@@ -4754,15 +4757,18 @@
       "choices": [
         {
           "text": "アルクェイド",
-          "target_cursor": 1048
+          "target_cursor": 1048,
+          "zh": "阿尔克艾德"
         },
         {
           "text": "琥珀さん",
-          "target_cursor": 1130
+          "target_cursor": 1130,
+          "zh": "琥珀女士"
         },
         {
           "text": "弓塚さつき",
-          "target_cursor": 1176
+          "target_cursor": 1176,
+          "zh": "弓冢皋月"
         }
       ]
     },

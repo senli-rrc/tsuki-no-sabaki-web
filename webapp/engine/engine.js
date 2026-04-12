@@ -1345,9 +1345,11 @@ const VN = (() => {
     choices.forEach(c => {
       const btn = document.createElement('button');
       btn.className = 'choice-btn';
-      btn.textContent = c.text;
+      // Show zh translation when in Chinese mode, fall back to jp text
+      const label = (currentLang === 'cn' && c.zh) ? c.zh : c.text;
+      btn.textContent = label;
       btn.onclick = () => {
-        playSE('select');   // selection sound
+        playSE('select');
         choiceMenu.style.display = 'none';
         cursor = c.target_cursor || cursor;
         execute();

@@ -39521,9 +39521,6 @@
       "zh": "�\u0001"
     },
     {
-      "op": "choice_begin"
-    },
-    {
       "op": "set_layer",
       "layer": 0
     },

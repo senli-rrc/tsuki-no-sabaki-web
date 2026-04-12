@@ -3,12 +3,6 @@
   "lang": "jp",
   "events": [
     {
-      "op": "choice_begin"
-    },
-    {
-      "op": "choice_begin"
-    },
-    {
       "op": "set_flag",
       "flag": 10,
       "value": 0
@@ -8080,12 +8074,6 @@
       "zh": "勺\n"
     },
     {
-      "op": "choice_begin"
-    },
-    {
-      "op": "choice_begin"
-    },
-    {
       "op": "color_fade",
       "mode": 1,
       "r": 255,
@@ -9667,12 +9655,6 @@
       "zh": "噗呲一下，一刀。\n那个穿着西装的女人就倒下了。\n"
     },
     {
-      "op": "choice_begin"
-    },
-    {
-      "op": "choice_begin"
-    },
-    {
       "op": "color_fade",
       "mode": 1,
       "r": 255,
@@ -9854,12 +9836,6 @@
       "value": 6
     },
     {
-      "op": "choice_begin"
-    },
-    {
-      "op": "choice_begin"
-    },
-    {
       "op": "color_fade",
       "mode": 1,
       "r": 255,
@@ -9871,12 +9847,6 @@
       "op": "set_flag",
       "flag": 13,
       "value": 0
-    },
-    {
-      "op": "choice_begin"
-    },
-    {
-      "op": "choice_begin"
     },
     {
       "op": "set_layer",
@@ -16369,12 +16339,6 @@
       "zh": "然后试图擦身而过的时候出现了\n用凶器匕首在胸口附近戳了一下。\n"
     },
     {
-      "op": "choice_begin"
-    },
-    {
-      "op": "choice_begin"
-    },
-    {
       "op": "color_fade",
       "mode": 1,
       "r": 255,
@@ -16582,12 +16546,6 @@
       "value": 6
     },
     {
-      "op": "choice_begin"
-    },
-    {
-      "op": "choice_begin"
-    },
-    {
       "op": "color_fade",
       "mode": 1,
       "r": 255,
@@ -16599,12 +16557,6 @@
       "op": "set_flag",
       "flag": 13,
       "value": 0
-    },
-    {
-      "op": "choice_begin"
-    },
-    {
-      "op": "choice_begin"
     },
     {
       "op": "color_fade",
@@ -20941,12 +20893,6 @@
       "text": "�\u001f\u0002",
       "offset": 139143,
       "zh": "�\u001f\u0002"
-    },
-    {
-      "op": "choice_begin"
-    },
-    {
-      "op": "choice_begin"
     },
     {
       "op": "color_fade",
@@ -29522,12 +29468,6 @@
       "text": "�\u0001\u0003",
       "offset": 197077,
       "zh": "​\n"
-    },
-    {
-      "op": "choice_begin"
-    },
-    {
-      "op": "choice_begin"
     },
     {
       "op": "color_fade",
@@ -38767,12 +38707,6 @@
       "zh": "�\u0013\u0004"
     },
     {
-      "op": "choice_begin"
-    },
-    {
-      "op": "choice_begin"
-    },
-    {
       "op": "set_layer",
       "layer": 0
     },
@@ -39102,9 +39036,6 @@
       "val": 2052
     },
     {
-      "op": "choice_begin"
-    },
-    {
       "op": "load_ui",
       "name": "han_m11"
     },
@@ -39351,18 +39282,9 @@
       "val": 135175
     },
     {
-      "op": "choice_begin"
-    },
-    {
       "op": "set_flag",
       "flag": 0,
       "value": 6
-    },
-    {
-      "op": "choice_begin"
-    },
-    {
-      "op": "choice_begin"
     },
     {
       "op": "text",
@@ -39370,9 +39292,6 @@
       "text": "�\u0003",
       "offset": 271371,
       "zh": "�\u0003"
-    },
-    {
-      "op": "choice_begin"
     },
     {
       "op": "set_layer",

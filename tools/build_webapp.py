@@ -123,12 +123,28 @@ def decode_script(data, translations=None):
     """
     Decode binary .scr bytecode into a list of event dicts.
     Returns: list of events (dicts with 'op' key and opcode-specific fields)
+
+    PSG .scr file layout:
+      [0x00] 8 bytes  "[SCRIPT]" magic
+      [0x08] 4 bytes  LE uint32 total content size
+      [0x0c] 4 bytes  LE uint32 script section 1 byte offset  ← where opcodes start
+      [0x10] 4 bytes  LE uint32 script section 2 byte offset
+      …               more header fields (section counts, parameters, etc.)
+      [sec1_offset]   actual bytecode / opcode stream
+
+    Scanning must start at sec1_offset, NOT at 0x0c, because header words
+    contain 4-byte file offsets whose low bytes happen to match opcode patterns
+    (e.g. 0x23 0x04 inside an address was misidentified as choice_begin).
     """
     events = []
-    i = 8  # skip [SCRIPT] header
 
-    # Skip header section (size word + label addresses)
-    size, i = read_u32(data, i)
+    # Read section 1 start offset from header (at file position 0x0c)
+    sec1_start = struct.unpack_from('<I', data, 0x0c)[0]
+    # Sanity-check: must be inside the file and after the header
+    if sec1_start < 0x10 or sec1_start >= len(data):
+        sec1_start = 0x0c  # fallback: old behaviour
+
+    i = sec1_start
 
     # Collect labels from header
     labels = {}
@@ -276,10 +292,10 @@ def decode_script(data, translations=None):
             continue
 
         # ── Choice menu ───────────────────────────────────────────
-        if b0 == 0x23 and b1 == 0x04:
-            events.append({'op': 'choice_begin'})
-            i += 4
-            continue
+        # NOTE: 0x23 0x04 was previously emitted as choice_begin, but this was
+        # a false positive — that byte pair appeared inside 4-byte section
+        # addresses in the file header, not in actual script opcodes.
+        # Real choice data in akane.json was crafted manually.  Skip for now.
 
         # ── Label / subroutine ────────────────────────────────────
         if b0 == 0x03 and b1 == 0x04:

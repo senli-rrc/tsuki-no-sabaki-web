@@ -3,9 +3,6 @@
   "lang": "jp",
   "events": [
     {
-      "op": "choice_begin"
-    },
-    {
       "op": "set_flag",
       "flag": 13,
       "value": 0

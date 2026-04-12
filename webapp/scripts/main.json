@@ -3,9 +3,6 @@
   "lang": "jp",
   "events": [
     {
-      "op": "choice_begin"
-    },
-    {
       "op": "set_flag",
       "flag": 5,
       "value": 0
@@ -29,9 +26,6 @@
       "op": "fade",
       "duration": 0,
       "flag": 83886096
-    },
-    {
-      "op": "choice_begin"
     },
     {
       "op": "set_layer",
@@ -108,9 +102,6 @@
     {
       "op": "play_sound",
       "file": "han_se021"
-    },
-    {
-      "op": "choice_begin"
     }
   ]
 }
