@@ -889,6 +889,9 @@ const VN = (() => {
           const rawJp = (ev.jp || '').replace(/\x07/g, '').replace(/!s|@/g, '');
           const isGarbage = /[\x00-\x08\x0b\x0c\x0e-\x1f\x7f\ufffd]/.test(rawJp);
           if (isGarbage) break;   // skip silently, continue event loop
+          // \u9E5A (鶚) is a PSG engine internal separator injected between cross-exam
+          // sections — it should never be displayed as dialogue text.
+          if (rawJp.trim() === '\u9E5A') break;
 
           const loads = pendingLoads.splice(0);
           const doShow = async () => {
@@ -1010,7 +1013,8 @@ const VN = (() => {
           break;
 
         case 'goto_script':
-          if (ev.target) { loadScript(ev.target); return; }
+          // preserveInventory=true: carry collected evidence into the next script
+          if (ev.target) { loadScript(ev.target, true); return; }
           break;
 
         case 'jump':
@@ -1071,9 +1075,28 @@ const VN = (() => {
     }
   });
 
+  // Clicking outside coat-menu buttons (on the transparent background) closes the menu
+  // and, if dialogue is waiting, advances it — so the player is never stuck.
+  coatMenu.addEventListener('click', e => {
+    const btnIds = ['coat-yusaburu','coat-datafile','coat-present','coat-back'];
+    const hitBtn = btnIds.some(id => document.getElementById(id).contains(e.target));
+    if (!hitBtn) {
+      hideCoatMenu();
+      hideEvidenceBook();
+      if (waitingClick) container.click();
+    }
+  });
+
   document.addEventListener('keydown', e => {
     if (e.code === 'Space' || e.code === 'Enter') {
       e.preventDefault();
+      // If coat menu is open, close it first; then advance dialogue if waiting
+      if (coatMenu.style.display === 'block') {
+        hideCoatMenu();
+        hideEvidenceBook();
+        if (waitingClick) container.click();
+        return;
+      }
       container.click();
     }
     if (e.code === 'KeyS') {
@@ -1295,7 +1318,9 @@ const VN = (() => {
   }
 
   // ── Script loader ─────────────────────────────────
-  async function loadScript(name) {
+  // preserveInventory=true when transitioning via goto_script (story continues);
+  // false when the player manually restarts or returns to menu (fresh start).
+  async function loadScript(name, preserveInventory = false) {
     currentScript = name;
     updateStatus(`Loading ${name}...`);
     // Clear all canvases so no previous scene bleeds into the new script
@@ -1317,7 +1342,7 @@ const VN = (() => {
     hideEvidenceBook();
     evidenceSelectPending = false;
     evidenceCorrectCursor = -1;
-    evidenceInventory     = [];
+    if (!preserveInventory) evidenceInventory = [];
     evBookView       = 'overview';
     evDetailItem     = null;
     evDetailSubpage  = 1;
@@ -1344,9 +1369,17 @@ const VN = (() => {
   }
 
   function updateStatus(msg) {
-    statusEl.textContent = msg !== undefined
-      ? msg
-      : `Playing: ${scriptSel.value} | Click or [Space] to advance | [S] to skip`;
+    if (msg !== undefined) {
+      statusEl.textContent = msg;
+      return;
+    }
+    if (evidenceSelectPending) {
+      statusEl.textContent =
+        `⚠ 出示证据阶段：右键/[1] 打开菜单 → 证拠品一覧 → 选择证据 → つきつける`;
+    } else {
+      statusEl.textContent =
+        `Playing: ${scriptSel.value} | 点击/[Space] 推进 | 右键/[1] 菜单 | [S] 跳过`;
+    }
   }
 
   // ── Public API ────────────────────────────────────

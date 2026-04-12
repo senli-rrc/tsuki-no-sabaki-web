@@ -62,6 +62,22 @@
     #bg-canvas     { z-index: 1; }
     #sprite-canvas { z-index: 2; }
 
+    /* ── Tooltip ──────────────────────────────────── */
+    #vn-tooltip {
+      position: fixed;
+      padding: 5px 10px;
+      background: rgba(0,0,0,0.82);
+      color: #f0e8c8;
+      font-size: 12px;
+      border-radius: 4px;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 9999;
+      display: none;
+      border: 1px solid rgba(255,210,100,0.35);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+
     /* ── Dialogue box ─────────────────────────────── */
     /*
       All rendering (portrait + frame) done on #textbox-canvas via JS compositing.
@@ -270,11 +286,15 @@
     <canvas id="coat-canvas" width="640" height="480"
             style="position:absolute;top:0;left:0;width:640px;height:480px;"></canvas>
     <!-- Invisible click-zones over each button (y 2-48, widths tuned to mask) -->
-    <div id="coat-yusaburu" style="position:absolute;left:5px; top:2px;width:150px;height:46px;cursor:pointer;"></div>
-    <div id="coat-datafile" style="position:absolute;left:175px;top:2px;width:152px;height:46px;cursor:pointer;"></div>
+    <div id="coat-yusaburu" style="position:absolute;left:5px; top:2px;width:150px;height:46px;cursor:pointer;"
+         data-tip="ゆさぶる — 追问证人（让证人补充说明）"></div>
+    <div id="coat-datafile" style="position:absolute;left:175px;top:2px;width:152px;height:46px;cursor:pointer;"
+         data-tip="データファイル — 打开证据簿 / 人物档案"></div>
     <!-- slot 3: つきつける — only shown in evidence-select mode -->
-    <div id="coat-present"  style="position:absolute;left:345px;top:2px;width:152px;height:46px;cursor:pointer;display:none;"></div>
-    <div id="coat-back"     style="position:absolute;left:517px;top:2px;width:122px;height:46px;cursor:pointer;"></div>
+    <div id="coat-present"  style="position:absolute;left:345px;top:2px;width:152px;height:46px;cursor:pointer;display:none;"
+         data-tip="つきつける — 出示证据反驳证词（证据出示阶段）"></div>
+    <div id="coat-back"     style="position:absolute;left:517px;top:2px;width:122px;height:46px;cursor:pointer;"
+         data-tip="戻る — 关闭菜单"></div>
   </div>
 
   <!-- ── Evidence book overlay (データファイル → 証拠品一覧) ─────────────
@@ -292,7 +312,7 @@
     <div id="ev-present-btn"
          style="position:absolute;left:460px;bottom:28px;width:160px;height:48px;
                 cursor:pointer;display:none;"
-         title="つきつける"></div>
+         data-tip="つきつける — 出示此证据反驳证词"></div>
     <!-- Photo click-zone: invisible overlay over the cyan text line in ch1 detail pages.
          han_item_109.jpg cyan text is at canvas coords x=253–563, y=242–257 (measured).
          Clicking this zone shows han_item_109_02.jpg (the photo referenced by cyan text).
@@ -301,7 +321,7 @@
     <div id="ev-photo-btn"
          style="position:absolute;left:253px;top:238px;width:312px;height:24px;
                 cursor:pointer;display:none;"
-         title="画像を見る"></div>
+         data-tip="点击查看照片"></div>
   </div>
 
   <!-- Intro video overlay — plays before Chapter 1; z-index above everything -->
@@ -424,6 +444,34 @@
 
   // ── Global back-to-menu hook for engine ──────────
   window._showMenu = showMenu;
+
+  // ── Tooltip system ────────────────────────────────
+  // Shows a styled tooltip for any element with data-tip attribute.
+  const _tip = document.getElementById('vn-tooltip');
+  let _tipTarget = null;
+
+  document.addEventListener('mouseover', e => {
+    const el = e.target.closest('[data-tip]');
+    if (!el) return;
+    _tipTarget = el;
+    _tip.textContent = el.dataset.tip;
+    _tip.style.display = 'block';
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!_tipTarget) return;
+    // Keep tooltip near cursor but prevent going off-screen
+    const x = Math.min(e.clientX + 14, window.innerWidth - _tip.offsetWidth - 8);
+    const y = Math.max(e.clientY - 32, 4);
+    _tip.style.left = x + 'px';
+    _tip.style.top  = y + 'px';
+  });
+
+  document.addEventListener('mouseout', e => {
+    const el = e.target.closest('[data-tip]');
+    if (el) { _tipTarget = null; _tip.style.display = 'none'; }
+  });
 </script>
+<div id="vn-tooltip"></div>
 </body>
 </html>
