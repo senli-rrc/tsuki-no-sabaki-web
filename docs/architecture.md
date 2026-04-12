@@ -18,7 +18,9 @@ The engine reads pre-extracted JSON script files and renders to HTML5 Canvas ele
 | Chapter select | `#chapter-screen` | `han_t_start01.jpg` | Three story chapters + Back |
 | Game | `#game-container` | canvas stack | Actual VN playback |
 
-Navigation is done by toggling `display: block / none` via JavaScript. The public API is `window._showMenu()` and `window._showChapterSelect()`.
+Navigation is done by toggling `display: block / none` via JavaScript. The public API exposed to the engine is:
+- `window._showMenu()` — return to main menu
+- `window._showChapterSelect()` — return to chapter select (called automatically when a chapter ends)
 
 ---
 
@@ -27,12 +29,15 @@ Navigation is done by toggling `display: block / none` via JavaScript. The publi
 All canvases are absolutely positioned inside `#game-container` (640×480 CSS px, scaled by the browser):
 
 ```
+z-index 29  #evidence-book        Evidence / character book overlay (HTML)
+z-index 28  #coat-menu            Right-click action menu (HTML)
 z-index 20  #choice-menu          Branch buttons (HTML)
 z-index 10  #fade-overlay         Black fade div
 z-index  5  #textbox div
                └── #textbox-canvas  640×150  Dialogue frame (composited)
                └── #dialogue-area   Text + click indicator (HTML)
 z-index  4  #portrait-canvas      168×200  Face portrait
+z-index  3  #item-canvas          640×480  Full-screen item overlays (han_item*)
 z-index  2  #sprite-canvas        640×480  Full-body character sprites
 z-index  1  #bg-canvas            640×480  Background images
 ```
@@ -50,7 +55,10 @@ The portrait canvas has `z-index: 4` (above sprites, below textbox). The left 16
 - The click-advance handler sets `portCanvas.style.display = 'none'` together with hiding `#textbox`.
 - `clearPortrait()` also sets `display: none`.
 
-The **portrait state** (`hasPortrait`, `currentPortrait`) is intentionally **not** cleared on text-advance. It persists so the next text event from the same speaker can restore the portrait without a new `load_image`. State is cleared only when `textwinc`/`mind` loads or on script/scene reset.
+The **portrait state** (`hasPortrait`, `currentPortrait`) is intentionally **not** cleared on text-advance. It persists so the next text event from the same speaker can restore the portrait without a new `load_image`. State is cleared:
+- When `textwinc`/`mind` loads (narrator mode)
+- At the **start of `drawBackground()`** — a scene change always invalidates the previous speaker's portrait, preventing stale portraits from bleeding into new scenes
+- On script/scene reset
 
 ---
 
@@ -74,6 +82,22 @@ Two events cause the engine to wait for a click:
 - `wait_click` — scene setup pause; clicking advances with no visual change.
 
 The `waitSource` string (`'text'` or `'wait_click'`) is checked in the click handler.
+
+### Evidence-present suspension
+
+When a `color_fade val=853009` event is seen, `evidenceSelectPending` is set. When the subsequent instruction `text` event is dismissed by the player, `execute()` does **not** resume — the engine stays suspended until `presentEvidence()` is called (player selects an item and clicks つきつける). At that point `evidenceCorrectCursor` (updated to point past the instruction text when it was dismissed) is loaded into `cursor` and execution resumes.
+
+### Chapter endings
+
+When the final script of each chapter reaches the end of its event list:
+
+| Script | Chapter |
+|--------|---------|
+| `mitsuki` | Chapter 1 — 月ノ裁き |
+| `s02_27` | Chapter 2 — 反転姉妹 |
+| `s03_06` | Chapter 3 — 反転、そしてサヨナラ |
+
+The engine calls `stopBGM()` and after an 800 ms delay calls `window._showChapterSelect()` to return the player to the chapter-select screen.
 
 ---
 
@@ -129,6 +153,20 @@ The colour is stored in `nextTextColor` and applied to `#dialogue-text` when `sh
 
 ---
 
+## PSG formatting codes
+
+`showText()` strips all PSG engine control codes before display:
+
+| Code | Meaning | Treatment |
+|------|---------|-----------|
+| `\x07` | In-text page-break / bell | Stripped before garbage test AND before display |
+| `!s` | Centre-align tag | Stripped before display |
+| `@` | Text pause marker | Stripped before display |
+
+**Critical:** `\x07` must also be stripped before the garbage-character regex test — ~31% of all dialogue events contain it, and it falls in the `[\x00-\x08]` range that would otherwise trigger the garbage filter.
+
+---
+
 ## Dialogue frame selection
 
 | `hasPortrait` | Frame | Canvas x | Text area |
@@ -140,11 +178,40 @@ Each frame image has a paired grayscale mask (`*_.jpg` in `assets/sprites/`) who
 
 ---
 
+## Evidence system
+
+### Signal
+
+`color_fade val=853009` activates evidence-presentation mode. The engine:
+1. Sets `evidenceSelectPending = true`
+2. Computes `evidenceCorrectCursor` = first event after all consecutive `jump` events within the next 500 events (the "correct answer" path start)
+3. Shows the amber hint bar
+
+### Instruction text suspension
+
+After the `color_fade val=853009`, the script typically shows an instruction `text` event. When the player dismisses it, `execute()` does **not** resume — `evidenceCorrectCursor` is updated to the current cursor (past the instruction) and the engine stays suspended.
+
+### Player flow
+
+1. Right-click → coat menu → **つきつける** (shown only when `evidenceSelectPending`)  
+   OR open データファイル → evidence book → select item detail → **つきつける** button (top-right of detail page, `#ev-present-btn` overlay at `left:349px; top:4px; width:185px; height:62px`)
+2. `presentEvidence()` clears `evidenceSelectPending`, sets `cursor = evidenceCorrectCursor`, calls `execute()`
+
+### Wrong-answer branches
+
+`jump` events (emitted by the PSG extractor for wrong-evidence retry loops) redirect `cursor` back to an earlier event only while `evidenceSelectPending` is true. Once evidence is presented, `jump` events are ignored (correct-path cursor already applied).
+
+### Chapter detection
+
+`getChapterType()` returns `'ch1'` for `akane`, `haruka`, `mitsuki` scripts and `'ch2'` for all others. Both chapter types show the `#ev-present-btn` in the detail page when `evidenceSelectPending` is active.
+
+---
+
 ## Audio
 
 - **BGM**: `<Audio>` element, loop = true, volume = 0.45. Started by `load_bgm` events.
 - **SFX**: Throw-away `new Audio(…).play()` calls, one per `play_sound` event.
-- BGM is stopped in `backToMenu()`.
+- BGM is stopped in `backToMenu()` and at chapter endings.
 
 ---
 
@@ -173,9 +240,33 @@ The PSG engine embeds control codes inside dialogue strings. These are stripped 
 
 The translation tool (`tools/translate_zh.py`) uses placeholder substitution to protect these codes during API calls.
 
+### Alternative translation API
+
+`translate_zh.py` uses the Anthropic SDK by default. To use any OpenAI-compatible API (OpenRouter, DeepSeek, Alibaba Qwen, etc.), replace the client initialisation and API call:
+
+```python
+import openai
+client = openai.OpenAI(api_key=api_key, base_url="https://<platform>/v1")
+response = client.chat.completions.create(
+    model=MODEL,
+    max_tokens=MAX_TOKENS,
+    messages=[
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user",   "content": user_msg},
+    ],
+)
+raw = response.choices[0].message.content
+```
+
 ### Garbage filter
 
 `text` events whose `jp` field contains binary extraction artifacts (null bytes, replacement chars, etc.) are silently skipped. **`\x07` is explicitly stripped before this test** to avoid false positives — ~31% of all dialogue events contain `\x07`.
+
+---
+
+## Tooltip system
+
+Any element with a `data-tip` attribute gets a styled tooltip on hover. The `#vn-tooltip` div must appear **before** the `<script src="engine/engine.js">` tag in `index.html` so that `document.getElementById('vn-tooltip')` resolves correctly at script initialisation time.
 
 ---
 
@@ -187,3 +278,4 @@ The translation tool (`tools/translate_zh.py`) uses placeholder substitution to 
 | Save / Load | Not implemented |
 | `set_flag` / branching flags | Events parsed but values not tracked |
 | `load_ui mind` | `mind.jpg` is a 640×480 thought overlay — not yet rendered |
+| Evidence 3-item combination | Haruka puzzle requires 3 correct items; web player accepts any single item (PSG flag state not tracked) |

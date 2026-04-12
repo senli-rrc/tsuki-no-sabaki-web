@@ -309,8 +309,10 @@
     <!-- つきつける button: shown only in ch2 testimony mode on item detail pages.
          Positioned to overlay the button area printed on han_it_XXh.jpg (approx).
          Adjust left/bottom if the button in the artwork is at a different position. -->
+    <!-- つきつける click-zone: covers the button printed at the top of the
+         detail-page artwork.  Measured from screenshot: x≈349-534, y≈4-65. -->
     <div id="ev-present-btn"
-         style="position:absolute;left:460px;bottom:28px;width:160px;height:48px;
+         style="position:absolute;left:349px;top:4px;width:185px;height:62px;
                 cursor:pointer;display:none;"
          data-tip="つきつける — 出示此证据反驳证词"></div>
     <!-- Photo click-zone: invisible overlay over the cyan text line in ch1 detail pages.
@@ -349,6 +351,7 @@
 </div>
 <div id="status"></div>
 
+<div id="vn-tooltip"></div>
 <script src="engine/engine.js"></script>
 <script>
   // ── Populate script selector ──────────────────────
@@ -442,8 +445,9 @@
   document.getElementById('ch-3').onclick    = () => startGame('s03_01');    // 反転、そしてサヨナラ
   document.getElementById('ch-back').onclick = showMenu;
 
-  // ── Global back-to-menu hook for engine ──────────
-  window._showMenu = showMenu;
+  // ── Global hooks for engine ───────────────────────
+  window._showMenu          = showMenu;
+  window._showChapterSelect = showChapterSelect;
 
   // ── Tooltip system ────────────────────────────────
   // Shows a styled tooltip for any element with data-tip attribute.
@@ -472,6 +476,5 @@
     if (el) { _tipTarget = null; _tip.style.display = 'none'; }
   });
 </script>
-<div id="vn-tooltip"></div>
 </body>
 </html>

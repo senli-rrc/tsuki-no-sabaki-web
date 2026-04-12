@@ -524,8 +524,9 @@ const VN = (() => {
     // Show つきつける overlay button only in ch2 testimony mode
     const presentBtn = document.getElementById('ev-present-btn');
     if (presentBtn) {
-      presentBtn.style.display =
-        (evidenceSelectPending && getChapterType() !== 'ch1') ? 'block' : 'none';
+      // Show つきつける in the detail page whenever evidence presentation is active,
+      // regardless of chapter — both ch1 (akane/haruka/mitsuki) and ch2 need it.
+      presentBtn.style.display = evidenceSelectPending ? 'block' : 'none';
     }
 
     // For ch1 main detail page (subpage=1): show invisible photo click-zone if a _02
@@ -660,6 +661,9 @@ const VN = (() => {
 
   // ── Background loader + auto-BGM ─────────────────
   async function drawBackground(name) {
+    // A scene change always invalidates the previous speaker's portrait.
+    // Clear it now so stale portraits never bleed into the new scene.
+    clearPortrait();
     const img = await loadImg(ASSET.bg(name));
     if (!img) return;
     bgCtx.clearRect(0, 0, W, H);
@@ -828,10 +832,13 @@ const VN = (() => {
     if (currentLang === 'cn' && zh && zh !== jp) display = zh;
     else if (currentLang !== 'jp' && text && text !== jp) display = text;
     else display = jp;
-    // Strip engine formatting codes (!s = PSG centre-line tag, \x07 = bell)
+    // Strip engine formatting codes:
+    //   \x07  — PSG bell / in-text page-break
+    //   !s    — centre-align tag
+    //   @     — text pause marker (mid-sentence beat; has no visual meaning in browser)
     // Strip leading ideographic spaces (U+3000) from every line — the original
     // text uses them as padding for centring, but we centre via CSS instead.
-    const stripped = display.replace(/\x07/g, '').replace(/!s/g, '');
+    const stripped = display.replace(/\x07/g, '').replace(/!s/g, '').replace(/@/g, '');
     fullText = stripped
       .split('\n')
       .map(line => line.replace(/^\u3000+/, ''))   // strip leading wide spaces
@@ -1039,6 +1046,27 @@ const VN = (() => {
     }
 
     textbox.style.display = 'none';
+
+    // When the final script of a chapter finishes, return to the chapter-select
+    // screen so the player can start the next chapter naturally.
+    const CHAPTER_ENDINGS = {
+      'mitsuki': 1,   // end of Chapter 1 (月ノ裁き)
+      's02_27':  2,   // end of Chapter 2 (反転姉妹)
+      's03_06':  3,   // end of Chapter 3 (反転、そしてサヨナラ)
+    };
+    if (CHAPTER_ENDINGS.hasOwnProperty(currentScript)) {
+      const chNum = CHAPTER_ENDINGS[currentScript];
+      stopBGM();
+      // Brief delay so the final fade has time to complete before switching screens.
+      setTimeout(() => {
+        if (typeof window._showChapterSelect === 'function') {
+          window._showChapterSelect();
+        }
+      }, 800);
+      updateStatus(`— Chapter ${chNum} complete —`);
+      return;
+    }
+
     updateStatus('— End of script —');
   }
 
@@ -1056,6 +1084,17 @@ const VN = (() => {
       // the next text event from the same speaker restores the portrait.
       // Portrait is only truly reset when textwinc/mind loads (clearPortrait).
       nextTextColor = '#e8eeff';
+
+      // If an evidence-present puzzle is active, this text event was the
+      // instruction prompt.  Stay suspended here — do NOT advance the script.
+      // Update evidenceCorrectCursor to the current cursor (right after the
+      // instruction text) so presentEvidence() resumes from the correct place.
+      if (evidenceSelectPending) {
+        evidenceCorrectCursor = cursor;
+        waitingClick = false;
+        waitSource   = null;
+        return;   // ← engine stays suspended; player must present evidence
+      }
     }
     // wait_click: no SE, no portrait change — just advance scene setup
 

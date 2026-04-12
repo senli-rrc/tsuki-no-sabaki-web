@@ -15,7 +15,7 @@ A browser-based Visual Novel player for *Tsuki no Sabaki* (月ノ裁き, PsG Sys
 node webapp/server.js          # serves on http://localhost:8765
 ```
 
-No build step. Edit source files and hard-refresh the browser.
+No build step. Edit source files and hard-refresh the browser (`Cmd+Shift+R`).
 
 ---
 
@@ -29,8 +29,13 @@ No build step. Edit source files and hard-refresh the browser.
 │   ├── engine/
 │   │   └── engine.js          # VN engine (event loop, canvas compositor, audio)
 │   ├── scripts/               # Extracted dialogue scripts (JSON, one per game scene)
-│   │   ├── s02_01.json        # Chapter 1 start
-│   │   ├── s02_20.json        # Chapter 2 start
+│   │   ├── akane.json         # Chapter 1, part 1
+│   │   ├── haruka.json        # Chapter 1, part 2
+│   │   ├── mitsuki.json       # Chapter 1, part 3 (final — triggers chapter select on end)
+│   │   ├── s02_01.json        # Chapter 2 start
+│   │   ├── s02_27.json        # Chapter 2 final (triggers chapter select on end)
+│   │   ├── s03_01.json        # Chapter 3 start
+│   │   ├── s03_06.json        # Chapter 3 final (triggers chapter select on end)
 │   │   └── …
 │   ├── assets/                # ⚠ NOT in git — see docs/setup.md
 │   │   ├── bg/                # Background images  (.jpg)
@@ -42,6 +47,7 @@ No build step. Edit source files and hard-refresh the browser.
 │   └── translation/           # (empty) placeholder for future translated scripts
 ├── tools/
 │   ├── extract_text.py        # Dumps dialogue from raw game binary → strings.json
+│   ├── translate_zh.py        # JP → Simplified Chinese translation via AI API
 │   ├── reinsert_text.py       # Writes translated text back into JSON scripts
 │   └── build_webapp.py        # Orchestrates the full extraction → webapp pipeline
 ├── translation/
@@ -61,16 +67,26 @@ No build step. Edit source files and hard-refresh the browser.
 |---------|---------|---------|
 | 1 | `#bg-canvas` 640×480 | Background images |
 | 2 | `#sprite-canvas` 640×480 | Full-body character sprites (mask-composited) |
+| 3 | `#item-canvas` 640×480 | Full-screen item overlays (han_item*) |
 | 4 | `#portrait-canvas` 168×200 | Face portrait — taller than frame so head overflows above |
 | 5 | `#textbox` div | Contains frame canvas + dialogue text overlay |
 | 10 | `#fade-overlay` | Black fade between scenes |
 | 20 | `#choice-menu` | Branch choice buttons |
+| 28 | `#coat-menu` | Right-click action menu |
+| 29 | `#evidence-book` | Evidence / character book overlay |
 
 ### Event loop
 Events are processed synchronously in `execute()`. Async events (`text`, `fade`, `wait`, `wait_click`) break the loop and resume on user input or timeout.
 
 **Critical: `wait_click` vs `text`**
-`wait_click` is a *scene-setup* pause (sprite swap, portrait load) that must NOT clear the portrait. Advancing a `text` event hides `#portrait-canvas` and `#textbox` but does **not** call `clearPortrait()` — portrait state (`hasPortrait`, `currentPortrait`) is preserved so the next line from the same speaker restores it. `clearPortrait()` is called only when `textwinc` or `mind` is loaded (narrator mode) or on scene/script reset. This is tracked via `waitSource = 'text' | 'wait_click'`.
+`wait_click` is a *scene-setup* pause (sprite swap, portrait load) that must NOT clear the portrait. Advancing a `text` event hides `#portrait-canvas` and `#textbox` but does **not** call `clearPortrait()` — portrait state (`hasPortrait`, `currentPortrait`) is preserved so the next line from the same speaker restores it.
+
+`clearPortrait()` is called:
+- When `textwinc` or `mind` is loaded (narrator mode)
+- At the **start of `drawBackground()`** — every scene change clears the previous portrait so stale face images never bleed into new scenes
+- On script/scene reset
+
+This is tracked via `waitSource = 'text' | 'wait_click'`.
 
 ### Simultaneous asset loading
 All `load_image` calls push a Promise to `pendingLoads[]`. When a `text` event is hit, `Promise.all(pendingLoads)` is awaited before rendering — background, sprite, and portrait all appear at the same frame.
@@ -80,6 +96,15 @@ All `load_image` calls push a Promise to `pendingLoads[]`. When a `text` event i
 
 ### Text colour
 `color_fade` events set `nextTextColor` (an `rgb(…)` string). On the next `text` event `dialogueEl.style.color` is applied. Green = narrator/title card, white = dialogue, blue-ish = internal monologue.
+
+### Chapter endings
+When the final script of a chapter reaches end-of-events, the engine calls `window._showChapterSelect()` after 800 ms so the player can start the next chapter:
+
+| Terminal script | Chapter |
+|----------------|---------|
+| `mitsuki` | Chapter 1 — 月ノ裁き |
+| `s02_27` | Chapter 2 — 反転姉妹 |
+| `s03_06` | Chapter 3 — 反転、そしてサヨナラ |
 
 ---
 
@@ -93,6 +118,32 @@ All `load_image` calls push a Promise to `pendingLoads[]`. When a `text` event i
 Face portraits (`han_*f.jpg`, 150×200) are drawn full-height into the 168×200 portrait canvas. Because the canvas is 200 px tall but the frame is only 150 px tall (both bottom-anchored), the top 50 px of the portrait shows above the frame.
 
 `#portrait-canvas` visibility is always in sync with `#textbox`: both hidden between lines, both shown by `renderTextbox()`. The portrait canvas is never visible without an accompanying dialogue frame.
+
+---
+
+## PSG formatting codes
+
+`showText()` strips all PSG engine control codes before display:
+
+| Code | Meaning | Treatment |
+|------|---------|-----------|
+| `\x07` | In-text page-break / bell | Stripped before garbage test AND before display |
+| `!s` | Centre-align tag | Stripped before display |
+| `@` | Text pause marker | Stripped before display |
+
+**Critical:** never add `\x07` to the garbage-character filter — ~31% of all dialogue events contain it and it falls in `[\x00-\x08]`. Strip it *before* the test.
+
+---
+
+## Evidence system
+
+`color_fade val=853009` activates evidence-presentation mode:
+1. Sets `evidenceSelectPending = true`, shows amber hint bar
+2. Computes `evidenceCorrectCursor` (past all wrong-answer `jump` events within 500 events)
+3. When the subsequent instruction `text` event is dismissed, the engine **stays suspended** (does not call `execute()`), updating `evidenceCorrectCursor` to point right after the instruction text
+4. Player opens evidence book → selects item → clicks **つきつける** (top-right of detail page) → `presentEvidence()` → script advances
+
+The `#ev-present-btn` HTML overlay is positioned at `left:349px; top:4px; width:185px; height:62px` to cover the つきつける button printed on the book artwork. It is shown whenever `evidenceSelectPending` is true, for both ch1 and ch2 scripts.
 
 ---
 
@@ -123,12 +174,13 @@ Each `scripts/*.json` file has an `{ "events": [...] }` array. Key event types:
 | `load_ui` | `name` | Currently ignored (frame handled by renderTextbox) |
 | `wait_click` | — | Scene-setup pause; does NOT clear portrait |
 | `fade` | `duration`, `flag` | Screen fade in/out |
-| `color_fade` | `mode`, `r`, `g`, `b`, `val` | Sets next text colour |
+| `color_fade` | `mode`, `r`, `g`, `b`, `val` | Sets next text colour; `val=853009` = evidence-present signal |
 | `load_bgm` | `file` | Start looping BGM |
 | `play_sound` | `file` | One-shot SFX |
 | `wait` | `frames` | Timed pause (frames × 16 ms) |
 | `choice_begin` | `choices[]` | Branch menu |
-| `goto_script` | `target` | Load another script |
+| `goto_script` | `target` | Load another script (preserves evidenceInventory) |
+| `jump` | `target` | Wrong-answer retry jump (only fires while evidenceSelectPending) |
 | `set_layer` | `layer` | Currently tracked but not rendered |
 | `set_flag` | `flag`, `value` | Currently ignored |
 
@@ -157,6 +209,24 @@ python3 tools/translate_zh.py --dry-run
 
 Formatting codes (`\x07`, `!s`, `@`) are protected by placeholder substitution during translation and restored afterwards. Cost: ~$1–2 for the full 16 000-line corpus with Haiku.
 
+### Use an alternative translation API (OpenAI-compatible)
+To use OpenRouter, DeepSeek, Alibaba Qwen, or any OpenAI-compatible endpoint, replace the client section in `tools/translate_zh.py`:
+
+```python
+import openai
+client = openai.OpenAI(api_key=api_key, base_url="https://<platform>/v1")
+# In translate_batch():
+response = client.chat.completions.create(
+    model=MODEL,
+    max_tokens=MAX_TOKENS,
+    messages=[
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user",   "content": user_msg},
+    ],
+)
+raw = response.choices[0].message.content
+```
+
 ### Add a translated line (legacy English path)
 Edit `translation/strings.json` (keyed by `offset`), then run `tools/reinsert_text.py` to regenerate the affected `scripts/*.json` file.
 
@@ -176,6 +246,7 @@ See `docs/setup.md` — requires original disc image and the Python tools.
 - **Do** edit `engine.js` and `index.html` directly — no build step.
 - **Do** use `compositeToCanvas()` for any image+mask pair; it is cached.
 - **Don't** commit `webapp/assets/` — those are binary files totalling ~281 MB.
-- **Don't** call `clearPortrait()` on text-advance — portrait state must persist across consecutive lines from the same speaker. Call it only when `textwinc`/`mind` loads or on script/scene reset.
+- **Don't** call `clearPortrait()` on text-advance — portrait state must persist across consecutive lines from the same speaker. It IS called in `drawBackground()` (scene change) and when `textwinc`/`mind` loads.
 - **Don't** add `\x07` to the garbage-character filter — it is a legitimate PSG in-text page-break used in ~31% of all dialogue events. Strip it in pre-processing before the regex test.
+- **Don't** place `#vn-tooltip` after the `<script>` tags — the element must exist in the DOM before `engine.js` runs so `getElementById('vn-tooltip')` resolves correctly.
 - **Don't** push `extracted/` or `*.img` disc images.
