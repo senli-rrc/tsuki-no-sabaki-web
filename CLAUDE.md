@@ -154,6 +154,53 @@ The `#ev-present-btn` HTML overlay is positioned at `left:349px; top:4px; width:
 
 ---
 
+## Player UX features (Phase 1–3)
+
+### Settings (`Settings` module, IIFE)
+Persisted in `localStorage['tsuki.settings.v1']`. Keys: `textSpeed` (ms/char, `0` = instant), `bgmVolume`, `seVolume`, `muted`, `fontSize` (px), `autoAdvanceDelay`. Panel: `#settings-panel` (opened from main menu "Option", pause menu, or `Esc`). `Settings.applyAll()` re-applies settings (font size now; audio on next `playBGM`/`playSound`).
+
+### Save / Load (`Saves` module)
+8 slots in `localStorage['tsuki.save.v1.<id>']` where `id ∈ {auto, quick, 1-6}`. Shape: `{scriptName, cursor, evidenceInventory, lang, timestamp, thumbnail, preview}`. Saves are only allowed when `canSave()` is true (`waitingClick && waitSource==='text' && !evidenceSelectPending`) — this guarantees the saved cursor points AT a dismissible text event. Load uses `fastForwardTo(cursor)` to replay state ops (`load_image`, `load_ui`, `set_layer`, `color_fade`, `load_bgm`) from event 0 up to the cursor, draining `pendingLoads` at each text/`wait_click` boundary; user-interactive ops (`text`, `choice`, `wait`, `fade`) are skipped. Panel: `#saveload-panel` (load from main menu, save/load from pause menu).
+
+### Pause menu
+Modal `#pause-menu` (Save / Load / Log / Settings / Main-Menu / Resume), opened with `Esc` in-game. Engine's `keydown` handler checks for any open modal (`#settings-panel`, `#pause-menu`, `#saveload-panel`, `#backlog-panel`) and returns early — modals swallow Space/Enter/S/A/B/1.
+
+### Backlog (ring buffer, `BACKLOG_MAX=200`)
+Every `text` event pushes `{script, idx, jp, text, zh, color}` to the ring buffer. Dedup on consecutive identical entries. Opened with `B` key, scroll-wheel-up on `#game-container`, or pause menu → Log. Panel: `#backlog-panel`, renders per-entry language-aware text via `pickBacklogText(entry, lang)`.
+
+### Auto-advance
+`A` key toggles. `scheduleAutoAdvance(source)` sets a timer after each line is fully rendered:
+- `source === 'text'` → `AUTO_ADVANCE_DELAY` (1800 ms)
+- `source === 'wait_click'` → 400 ms (scene-setup pauses should flow)
+- `skipping` → `SKIP_DELAY` (40 ms)
+
+Cancelled by `cancelAutoAdvance()` on any user click, modal open, or `evidenceSelectPending`.
+
+### Skip modes
+`S` = skip-read (stops on any line not in `Visited`); `Shift+S` = skip-all. `Visited` module tracks `{script, idx}` pairs in `localStorage['tsuki.visited.v1']` with 600 ms debounced flush + `beforeunload` flush. Every text render calls `Visited.mark(script, idx)`. Status line shows `[⏭ SKIP]`, `[⏭ SKIP-ALL]`, `[▶ AUTO]` tags.
+
+### Keybindings
+| Key | Action |
+|-----|--------|
+| Click / Space / Enter | Advance text |
+| `Esc` | Pause menu in-game, close modal otherwise |
+| `S` | Toggle skip-read |
+| `Shift+S` | Toggle skip-all |
+| `A` | Toggle auto-advance |
+| `B` | Toggle backlog |
+| `1` / Right-click | Coat menu |
+| Scroll-wheel up (on game) | Open backlog |
+
+### Public API (`window.VN`)
+- `VN.settings` — Settings module
+- `VN.saves` — Saves module (incl. `canSave()`, `save(slot)`, `load(slot)`, `list()`, `delete(slot)`)
+- `VN.visited` — Visited module
+- `VN.getBacklog()` — copy of ring buffer
+- `VN.setAutoAdvance(bool)` / `VN.isAutoAdvance()`
+- `VN.restart()` — reload current script from event 0
+
+---
+
 ## Asset naming conventions
 
 | Prefix | Location | Description |

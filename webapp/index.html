@@ -203,6 +203,342 @@
       color: #334; font-size: 10px;
       margin-top: 3px; text-align: center;
     }
+
+    /* ── Settings panel (modal overlay) ───────────────
+       Opened via main-menu "Option" button or Esc key.
+       z-index 100 = above everything in-game.                        */
+    #settings-panel {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.72);
+      z-index: 100;
+      display: none;
+      align-items: center; justify-content: center;
+      font-family: 'Hiragino Sans', 'Noto Sans JP', 'Segoe UI', sans-serif;
+    }
+    #settings-panel .sp-card {
+      background: linear-gradient(180deg, #2a1a10 0%, #1a0d06 100%);
+      border: 2px solid #7a4820;
+      border-radius: 8px;
+      padding: 24px 30px;
+      width: 420px;
+      color: #f0d8a0;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,220,140,0.1);
+    }
+    #settings-panel h2 {
+      margin: 0 0 18px;
+      text-align: center;
+      font-size: 20px;
+      letter-spacing: 0.1em;
+      color: #ffe8b0;
+      font-weight: normal;
+    }
+    .sp-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 12px 0;
+      gap: 12px;
+    }
+    .sp-row > label {
+      font-size: 14px;
+      color: #e8d0a0;
+      flex: 1;
+    }
+    .sp-row select {
+      background: #1a0d06;
+      color: #f0d8a0;
+      border: 1px solid #7a4820;
+      padding: 4px 10px;
+      border-radius: 3px;
+      font-size: 13px;
+      cursor: pointer;
+      min-width: 140px;
+    }
+    .sp-row input[type="range"] {
+      width: 180px;
+      accent-color: #c87840;
+    }
+    .sp-row input[type="checkbox"] {
+      width: 18px; height: 18px;
+      accent-color: #c87840;
+      cursor: pointer;
+    }
+    .sp-row .sp-val {
+      display: inline-block;
+      min-width: 36px;
+      text-align: right;
+      color: #c8a860;
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+    }
+    #sp-close {
+      display: block;
+      margin: 20px auto 0;
+      background: linear-gradient(180deg, #5a2e10 0%, #3d1e08 100%);
+      border: 2px solid #7a4820;
+      border-radius: 4px;
+      color: #f0d8a0;
+      padding: 8px 28px;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: background 0.1s, border-color 0.1s;
+    }
+    #sp-close:hover {
+      background: linear-gradient(180deg, #7a3e18 0%, #5a2e10 100%);
+      border-color: #c87840;
+      color: #ffe8b0;
+    }
+
+    /* ── Pause menu (in-game ESC) ─────────────────── */
+    #pause-menu {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.72);
+      z-index: 101;
+      display: none;
+      align-items: center; justify-content: center;
+      font-family: 'Hiragino Sans', 'Noto Sans JP', 'Segoe UI', sans-serif;
+    }
+    #pause-menu .pm-card {
+      background: linear-gradient(180deg, #2a1a10 0%, #1a0d06 100%);
+      border: 2px solid #7a4820;
+      border-radius: 8px;
+      padding: 22px 28px;
+      width: 300px;
+      color: #f0d8a0;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,220,140,0.1);
+    }
+    #pause-menu h2 {
+      margin: 0 0 16px;
+      text-align: center;
+      font-size: 18px;
+      letter-spacing: 0.1em;
+      color: #ffe8b0;
+      font-weight: normal;
+    }
+    .pm-btn {
+      display: block; width: 100%;
+      margin: 6px 0;
+      background: linear-gradient(180deg, #5a2e10 0%, #3d1e08 100%);
+      border: 2px solid #7a4820;
+      border-radius: 4px;
+      color: #f0d8a0;
+      padding: 9px 16px;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: background 0.1s, border-color 0.1s, color 0.1s;
+    }
+    .pm-btn:hover:not(:disabled) {
+      background: linear-gradient(180deg, #7a3e18 0%, #5a2e10 100%);
+      border-color: #c87840;
+      color: #ffe8b0;
+    }
+    .pm-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* ── Save/Load panel (8 slots) ────────────────── */
+    #saveload-panel {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.78);
+      z-index: 102;
+      display: none;
+      align-items: center; justify-content: center;
+      font-family: 'Hiragino Sans', 'Noto Sans JP', 'Segoe UI', sans-serif;
+    }
+    #saveload-panel .sl-card {
+      background: linear-gradient(180deg, #2a1a10 0%, #1a0d06 100%);
+      border: 2px solid #7a4820;
+      border-radius: 8px;
+      padding: 20px 24px 16px;
+      width: 560px;
+      max-height: 88vh;
+      overflow-y: auto;
+      color: #f0d8a0;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,220,140,0.1);
+    }
+    #saveload-panel h2 {
+      margin: 0 0 14px;
+      text-align: center;
+      font-size: 19px;
+      letter-spacing: 0.1em;
+      color: #ffe8b0;
+      font-weight: normal;
+    }
+    #sl-slots {
+      display: grid;
+      grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+      gap: 10px;
+    }
+    .sl-slot {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: rgba(40,24,12,0.6);
+      border: 1px solid #5a2e10;
+      border-radius: 4px;
+      padding: 8px;
+      cursor: pointer;
+      min-width: 0;
+      transition: background 0.1s, border-color 0.1s;
+    }
+    .sl-slot:hover {
+      background: rgba(80,40,16,0.7);
+      border-color: #c87840;
+    }
+    .sl-slot.empty {
+      opacity: 0.55;
+    }
+    .sl-slot.empty:hover {
+      background: rgba(60,30,12,0.55);
+    }
+    .sl-thumb {
+      width: 80px; height: 60px;
+      background: #000;
+      border: 1px solid #3d1e08;
+      flex-shrink: 0;
+      object-fit: cover;
+    }
+    .sl-meta {
+      flex: 1;
+      min-width: 0;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+    .sl-meta .sl-label {
+      color: #ffe8b0;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+    .sl-meta .sl-time {
+      color: #c8a860;
+      font-size: 10px;
+    }
+    .sl-meta .sl-preview {
+      color: #e8d0a0;
+      margin-top: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .sl-meta .sl-empty-label {
+      color: #8a6040;
+      font-style: italic;
+    }
+    .sl-slot .sl-del {
+      align-self: flex-start;
+      background: transparent;
+      color: #8a6040;
+      border: 1px solid #5a2e10;
+      border-radius: 3px;
+      padding: 1px 6px;
+      font-size: 10px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .sl-slot .sl-del:hover {
+      color: #f0d8a0;
+      border-color: #c87840;
+      background: #3d1e08;
+    }
+    #sl-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+      font-size: 12px;
+      color: #c8a860;
+    }
+    #sl-close {
+      background: linear-gradient(180deg, #5a2e10 0%, #3d1e08 100%);
+      border: 2px solid #7a4820;
+      border-radius: 4px;
+      color: #f0d8a0;
+      padding: 6px 22px;
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+    }
+    #sl-close:hover {
+      background: linear-gradient(180deg, #7a3e18 0%, #5a2e10 100%);
+      border-color: #c87840;
+      color: #ffe8b0;
+    }
+
+    /* ── Backlog panel (dialogue history) ─────────── */
+    #backlog-panel {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.78);
+      z-index: 103;
+      display: none;
+      align-items: center; justify-content: center;
+      font-family: 'Hiragino Sans', 'Noto Sans JP', 'Segoe UI', sans-serif;
+    }
+    #backlog-panel .bl-card {
+      background: linear-gradient(180deg, #2a1a10 0%, #1a0d06 100%);
+      border: 2px solid #7a4820;
+      border-radius: 8px;
+      padding: 18px 22px 14px;
+      width: 620px;
+      max-height: 88vh;
+      display: flex; flex-direction: column;
+      color: #f0d8a0;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,220,140,0.1);
+    }
+    #backlog-panel h2 {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 18px;
+      letter-spacing: 0.1em;
+      color: #ffe8b0;
+      font-weight: normal;
+    }
+    #bl-entries {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 10px;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid #3d1e08;
+      border-radius: 4px;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+    .bl-entry {
+      padding: 5px 0;
+      border-bottom: 1px dashed rgba(122,72,32,0.25);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .bl-entry:last-child { border-bottom: none; }
+    #bl-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      font-size: 11px;
+      color: #c8a860;
+    }
+    #bl-close {
+      background: linear-gradient(180deg, #5a2e10 0%, #3d1e08 100%);
+      border: 2px solid #7a4820;
+      border-radius: 4px;
+      color: #f0d8a0;
+      padding: 6px 22px;
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+    }
+    #bl-close:hover {
+      background: linear-gradient(180deg, #7a3e18 0%, #5a2e10 100%);
+      border-color: #c87840;
+      color: #ffe8b0;
+    }
   </style>
 </head>
 <body>
@@ -352,6 +688,101 @@
 <div id="status"></div>
 
 <div id="vn-tooltip"></div>
+
+<!-- ════════════════════════════════════════════════
+     PAUSE MENU (in-game, opened by ESC)
+═════════════════════════════════════════════════ -->
+<div id="pause-menu">
+  <div class="pm-card">
+    <h2>一時停止 / Pause</h2>
+    <button class="pm-btn" id="pm-save">セーブ / Save</button>
+    <button class="pm-btn" id="pm-load">ロード / Load</button>
+    <button class="pm-btn" id="pm-log">記録 / Backlog</button>
+    <button class="pm-btn" id="pm-settings">設定 / Settings</button>
+    <button class="pm-btn" id="pm-title">タイトルへ / Main Menu</button>
+    <button class="pm-btn" id="pm-resume">戻る / Resume</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     BACKLOG PANEL (dialogue history)
+═════════════════════════════════════════════════ -->
+<div id="backlog-panel">
+  <div class="bl-card">
+    <h2>記録 / Backlog</h2>
+    <div id="bl-entries"></div>
+    <div id="bl-footer">
+      <span id="bl-count"></span>
+      <button id="bl-close">閉じる / Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SAVE / LOAD PANEL (8 slots)
+     Opens from Pause menu or main-menu Load button.
+     Mode is 'save' or 'load' — set before opening.
+═════════════════════════════════════════════════ -->
+<div id="saveload-panel">
+  <div class="sl-card">
+    <h2 id="sl-title">ロード / Load</h2>
+    <div id="sl-slots"></div>
+    <div id="sl-footer">
+      <span id="sl-hint">Click a slot to load. Empty slots are disabled.</span>
+      <button id="sl-close">閉じる / Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SETTINGS PANEL (modal)
+     Opens from main-menu "Option" or Esc key anywhere.
+═════════════════════════════════════════════════ -->
+<div id="settings-panel">
+  <div class="sp-card">
+    <h2>設定 / Settings</h2>
+
+    <div class="sp-row">
+      <label for="sp-text-speed">Text Speed</label>
+      <select id="sp-text-speed">
+        <option value="50">Slow</option>
+        <option value="25">Normal</option>
+        <option value="10">Fast</option>
+        <option value="0">Instant</option>
+      </select>
+    </div>
+
+    <div class="sp-row">
+      <label for="sp-bgm-vol">BGM Volume</label>
+      <input id="sp-bgm-vol" type="range" min="0" max="100" step="1">
+      <span class="sp-val" id="sp-bgm-val">45</span>
+    </div>
+
+    <div class="sp-row">
+      <label for="sp-se-vol">SE Volume</label>
+      <input id="sp-se-vol" type="range" min="0" max="100" step="1">
+      <span class="sp-val" id="sp-se-val">80</span>
+    </div>
+
+    <div class="sp-row">
+      <label for="sp-muted">Mute All</label>
+      <input id="sp-muted" type="checkbox">
+    </div>
+
+    <div class="sp-row">
+      <label for="sp-font-size">Font Size</label>
+      <select id="sp-font-size">
+        <option value="13">Small</option>
+        <option value="15">Medium</option>
+        <option value="18">Large</option>
+        <option value="22">X-Large</option>
+      </select>
+    </div>
+
+    <button id="sp-close">閉じる / Close</button>
+  </div>
+</div>
+
 <script src="engine/engine.js"></script>
 <script>
   // ── Populate script selector ──────────────────────
@@ -435,8 +866,8 @@
 
   // ── Menu button wiring ────────────────────────────
   document.getElementById('menu-start').onclick  = showChapterSelect;
-  document.getElementById('menu-load').onclick   = () => {};  // TODO: save/load
-  document.getElementById('menu-option').onclick = () => {};  // TODO: options
+  document.getElementById('menu-load').onclick   = () => openSaveLoad('load');
+  document.getElementById('menu-option').onclick = () => openSettings();
   document.getElementById('menu-exit').onclick   = () => window.close();
 
   // ── Chapter select wiring ─────────────────────────
@@ -475,6 +906,260 @@
     const el = e.target.closest('[data-tip]');
     if (el) { _tipTarget = null; _tip.style.display = 'none'; }
   });
+
+  // ── Settings panel wiring ─────────────────────────
+  const spPanel    = document.getElementById('settings-panel');
+  const spTextSpd  = document.getElementById('sp-text-speed');
+  const spBgmVol   = document.getElementById('sp-bgm-vol');
+  const spBgmVal   = document.getElementById('sp-bgm-val');
+  const spSeVol    = document.getElementById('sp-se-vol');
+  const spSeVal    = document.getElementById('sp-se-val');
+  const spMuted    = document.getElementById('sp-muted');
+  const spFontSize = document.getElementById('sp-font-size');
+  const spClose    = document.getElementById('sp-close');
+
+  function hydrateSettingsUI() {
+    const s = VN.settings.all();
+    spTextSpd.value  = String(s.textSpeed);
+    spBgmVol.value   = Math.round(s.bgmVolume * 100);
+    spBgmVal.textContent = spBgmVol.value;
+    spSeVol.value    = Math.round(s.seVolume * 100);
+    spSeVal.textContent  = spSeVol.value;
+    spMuted.checked  = !!s.muted;
+    spFontSize.value = String(s.fontSize);
+  }
+
+  function openSettings()  { hydrateSettingsUI(); spPanel.style.display = 'flex'; }
+  function closeSettings() { spPanel.style.display = 'none'; }
+  function toggleSettings() {
+    if (spPanel.style.display === 'flex') closeSettings(); else openSettings();
+  }
+  window._toggleSettings = toggleSettings;
+
+  // Live-update handlers
+  spTextSpd.addEventListener('change', e =>
+    VN.settings.set('textSpeed', parseInt(e.target.value, 10)));
+  spBgmVol.addEventListener('input', e => {
+    const v = parseInt(e.target.value, 10);
+    spBgmVal.textContent = v;
+    VN.settings.set('bgmVolume', v / 100);
+  });
+  spSeVol.addEventListener('input', e => {
+    const v = parseInt(e.target.value, 10);
+    spSeVal.textContent = v;
+    VN.settings.set('seVolume', v / 100);
+  });
+  spMuted.addEventListener('change', e =>
+    VN.settings.set('muted', e.target.checked));
+  spFontSize.addEventListener('change', e =>
+    VN.settings.set('fontSize', parseInt(e.target.value, 10)));
+
+  spClose.addEventListener('click', closeSettings);
+  // Click backdrop to close (but not clicks inside the card)
+  spPanel.addEventListener('click', e => {
+    if (e.target === spPanel) closeSettings();
+  });
+
+  // ── Pause menu wiring ─────────────────────────────
+  const pmPanel    = document.getElementById('pause-menu');
+  const pmSaveBtn  = document.getElementById('pm-save');
+  const pmLoadBtn  = document.getElementById('pm-load');
+  const pmCfgBtn   = document.getElementById('pm-settings');
+  const pmTitleBtn = document.getElementById('pm-title');
+  const pmResume   = document.getElementById('pm-resume');
+
+  function openPauseMenu() {
+    // Disable Save if the engine can't currently snapshot (e.g. mid-fade/choice)
+    pmSaveBtn.disabled = !VN.saves.canSave();
+    pmPanel.style.display = 'flex';
+  }
+  function closePauseMenu() { pmPanel.style.display = 'none'; }
+  function togglePauseMenu() {
+    if (pmPanel.style.display === 'flex') closePauseMenu(); else openPauseMenu();
+  }
+  window._togglePauseMenu = togglePauseMenu;
+
+  pmResume.addEventListener('click', closePauseMenu);
+  pmCfgBtn.addEventListener('click', () => { closePauseMenu(); openSettings(); });
+  pmSaveBtn.addEventListener('click', () => {
+    if (pmSaveBtn.disabled) return;
+    closePauseMenu(); openSaveLoad('save');
+  });
+  pmLoadBtn.addEventListener('click', () => { closePauseMenu(); openSaveLoad('load'); });
+  pmTitleBtn.addEventListener('click', () => {
+    if (!confirm('Return to main menu? Unsaved progress will be lost.')) return;
+    closePauseMenu();
+    VN.backToMenu();
+  });
+  pmPanel.addEventListener('click', e => {
+    if (e.target === pmPanel) closePauseMenu();
+  });
+
+  // ── Save/Load UI wiring ───────────────────────────
+  const slPanel = document.getElementById('saveload-panel');
+  const slTitle = document.getElementById('sl-title');
+  const slSlots = document.getElementById('sl-slots');
+  const slHint  = document.getElementById('sl-hint');
+  const slClose = document.getElementById('sl-close');
+  let slMode = 'load';   // 'save' | 'load'
+
+  const SLOT_LABELS = {
+    auto:  'Auto',
+    quick: 'Quick',
+    '1': 'Slot 1', '2': 'Slot 2', '3': 'Slot 3',
+    '4': 'Slot 4', '5': 'Slot 5', '6': 'Slot 6',
+  };
+
+  function fmtTime(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ` +
+           `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function renderSlots() {
+    slSlots.innerHTML = '';
+    VN.saves.list().forEach(({ slot, data }) => {
+      const el = document.createElement('div');
+      el.className = 'sl-slot' + (data ? '' : ' empty');
+      const label = SLOT_LABELS[slot] || slot;
+      if (data) {
+        el.innerHTML = `
+          <img class="sl-thumb" src="${data.thumbnail || ''}" alt="">
+          <div class="sl-meta">
+            <div class="sl-label">${label} · ${data.scriptName || '?'}</div>
+            <div class="sl-time">${fmtTime(data.timestamp)}</div>
+            <div class="sl-preview"></div>
+          </div>`;
+        el.querySelector('.sl-preview').textContent = data.preview || '';
+        // Delete button (manual slots only)
+        if (slot !== 'auto') {
+          const del = document.createElement('button');
+          del.className = 'sl-del';
+          del.textContent = '×';
+          del.title = 'Delete save';
+          del.onclick = (e) => {
+            e.stopPropagation();
+            if (!confirm(`Delete ${label}?`)) return;
+            VN.saves.erase(slot);
+            renderSlots();
+          };
+          el.appendChild(del);
+        }
+      } else {
+        el.innerHTML = `
+          <div class="sl-thumb"></div>
+          <div class="sl-meta">
+            <div class="sl-label">${label}</div>
+            <div class="sl-empty-label">-- Empty --</div>
+          </div>`;
+      }
+      el.addEventListener('click', () => onSlotClick(slot, data));
+      slSlots.appendChild(el);
+    });
+  }
+
+  async function onSlotClick(slot, data) {
+    if (slMode === 'save') {
+      if (slot === 'auto') return;                                  // auto is engine-managed
+      if (data && !confirm(`Overwrite ${SLOT_LABELS[slot]}?`)) return;
+      if (!VN.saves.canSave()) {
+        alert('Cannot save right now. Wait for dialogue to finish and try again.');
+        return;
+      }
+      const ok = VN.saves.write(slot);
+      if (ok) { renderSlots(); }
+      else    { alert('Save failed.'); }
+    } else {
+      if (!data) return;
+      closeSaveLoad();
+      // Ensure the game screen is visible before restoring
+      if (typeof startGameForRestore === 'function') startGameForRestore();
+      const ok = await VN.saves.restore(slot);
+      if (!ok) alert('Load failed — save file is missing or corrupted.');
+    }
+  }
+
+  function openSaveLoad(mode) {
+    slMode = mode;
+    slTitle.textContent = mode === 'save' ? 'セーブ / Save' : 'ロード / Load';
+    slHint.textContent  = mode === 'save'
+      ? 'Click an empty slot to save. Click a filled slot to overwrite.'
+      : 'Click a slot to load.';
+    renderSlots();
+    slPanel.style.display = 'flex';
+  }
+  function closeSaveLoad() { slPanel.style.display = 'none'; }
+
+  slClose.addEventListener('click', closeSaveLoad);
+  slPanel.addEventListener('click', e => {
+    if (e.target === slPanel) closeSaveLoad();
+  });
+
+  // Helper: from main-menu Load, a successful restore needs the game screen visible
+  function startGameForRestore() {
+    menuScreen.style.display    = 'none';
+    chapterScreen.style.display = 'none';
+    gameContainer.style.display = 'block';
+    controls.style.display      = 'flex';
+    statusBar.style.display     = 'block';
+  }
+
+  // ── Backlog UI wiring ─────────────────────────────
+  const blPanel   = document.getElementById('backlog-panel');
+  const blEntries = document.getElementById('bl-entries');
+  const blCount   = document.getElementById('bl-count');
+  const blClose   = document.getElementById('bl-close');
+  const pmLog     = document.getElementById('pm-log');
+
+  function currentLangForDisplay() {
+    return document.getElementById('lang-select').value || 'jp';
+  }
+
+  function pickBacklogText(entry, lang) {
+    if (lang === 'cn' && entry.zh && entry.zh !== entry.jp) return entry.zh;
+    if (lang !== 'jp' && entry.text && entry.text !== entry.jp) return entry.text;
+    return entry.jp;
+  }
+
+  function renderBacklog() {
+    const lang = currentLangForDisplay();
+    const items = VN.getBacklog();
+    blEntries.innerHTML = '';
+    items.forEach(entry => {
+      const txt = pickBacklogText(entry, lang)
+        .replace(/\x07/g, '')
+        .replace(/!s|@/g, '')
+        .split('\n')
+        .map(l => l.replace(/^\u3000+/, ''))
+        .join('\n')
+        .trim();
+      if (!txt) return;
+      const el = document.createElement('div');
+      el.className = 'bl-entry';
+      el.textContent = txt;
+      if (entry.color) el.style.color = entry.color;
+      blEntries.appendChild(el);
+    });
+    blCount.textContent = `${items.length} / 200 lines`;
+    // Scroll to bottom (newest at the bottom)
+    blEntries.scrollTop = blEntries.scrollHeight;
+  }
+
+  function openBacklog()  { renderBacklog(); blPanel.style.display = 'flex'; }
+  function closeBacklog() { blPanel.style.display = 'none'; }
+  function toggleBacklog() {
+    if (blPanel.style.display === 'flex') closeBacklog(); else openBacklog();
+  }
+  window._openBacklog   = openBacklog;
+  window._toggleBacklog = toggleBacklog;
+
+  blClose.addEventListener('click', closeBacklog);
+  blPanel.addEventListener('click', e => {
+    if (e.target === blPanel) closeBacklog();
+  });
+  pmLog.addEventListener('click', () => { closePauseMenu(); openBacklog(); });
 </script>
 </body>
 </html>

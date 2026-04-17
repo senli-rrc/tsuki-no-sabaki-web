@@ -68,6 +68,7 @@ const VN = (() => {
   //   Ch1 items: 'han_item107', 'han_item112', ... (full-screen overlay names)
   //   Ch2 items: 'han_it_03l', 'han_it_05r', ... (l/r scene icons = acquisition signal)
   let evidenceSelectPending  = false;
+  let evidenceIsAcquisition  = false;  // true = item-filed notification, false = presentation challenge
   let evidenceCorrectCursor  = -1;
   let evidenceInventory      = [];
 
@@ -618,6 +619,7 @@ const VN = (() => {
     hideCoatMenu();
     if (evidenceSelectPending && evidenceCorrectCursor >= 0) {
       evidenceSelectPending = false;
+      evidenceIsAcquisition = false;
       evHint.style.display = 'none';   // hide amber hint bar
       waitingClick = false;
       waitSource   = null;
@@ -765,17 +767,135 @@ const VN = (() => {
     if (p) pendingLoads.push(p);
   }
 
+  // ── Settings (persisted to localStorage) ─────────
+  // Centralised user-facing options. Hydrated at startup, written on every change.
+  const SETTINGS_KEY = 'tsuki.settings.v1';
+  const DEFAULT_SETTINGS = {
+    textSpeed: 25,      // ms per char; 0 = instant whole-line render
+    bgmVolume: 0.45,    // 0.0 – 1.0
+    seVolume:  0.80,    // 0.0 – 1.0
+    muted:     false,
+    fontSize:  15,      // px applied to #dialogue-text
+  };
+  const Settings = (() => {
+    let data;
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      data = { ...DEFAULT_SETTINGS, ...(raw ? JSON.parse(raw) : {}) };
+    } catch (e) { data = { ...DEFAULT_SETTINGS }; }
+    function save() {
+      try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(data)); } catch (e) {}
+    }
+    function applyAll() {
+      if (dialogueEl) dialogueEl.style.fontSize = data.fontSize + 'px';
+      if (bgmEl) bgmEl.volume = data.muted ? 0 : data.bgmVolume;
+    }
+    return {
+      get: k => data[k],
+      set(k, v) { data[k] = v; save(); applyAll(); },
+      all: () => ({ ...data }),
+      applyAll,
+    };
+  })();
+
+  // ── Read / visited tracking (persisted) ──────────
+  // Remembers which text events the player has seen+advanced past, as
+  // "<scriptName>:<eventIndex>" strings.  Used by skip-read mode and
+  // (future) choice-history highlighting.  Writes are debounced.
+  const VISITED_KEY = 'tsuki.visited.v1';
+  const Visited = (() => {
+    let set;
+    try {
+      const raw = localStorage.getItem(VISITED_KEY);
+      set = new Set(raw ? JSON.parse(raw) : []);
+    } catch (e) { set = new Set(); }
+    let dirty = false;
+    let flushTimer = null;
+    function flush() {
+      if (!dirty) return;
+      try { localStorage.setItem(VISITED_KEY, JSON.stringify([...set])); } catch (e) {}
+      dirty = false;
+    }
+    function mkKey(s, i) { return `${s}:${i}`; }
+    return {
+      has(s, i) { return set.has(mkKey(s, i)); },
+      mark(s, i) {
+        const k = mkKey(s, i);
+        if (set.has(k)) return;
+        set.add(k);
+        dirty = true;
+        clearTimeout(flushTimer);
+        flushTimer = setTimeout(flush, 600);
+      },
+      size: () => set.size,
+      clearAll() { set.clear(); dirty = true; flush(); },
+      flush,
+    };
+  })();
+  window.addEventListener('beforeunload', () => { try { Visited.flush(); } catch (e) {} });
+
+  // ── Backlog (dialogue history, in-memory ring buffer) ─
+  const BACKLOG_MAX = 200;
+  const backlog = [];
+  function pushBacklog(scriptName, idx, ev) {
+    const last = backlog[backlog.length - 1];
+    if (last && last.scriptName === scriptName && last.eventIndex === idx) return;
+    backlog.push({
+      scriptName,
+      eventIndex: idx,
+      jp: ev.jp || '',
+      text: ev.text || '',
+      zh: ev.zh || '',
+      color: nextTextColor,
+    });
+    if (backlog.length > BACKLOG_MAX) backlog.shift();
+  }
+
+  // ── Auto-advance / skip state ────────────────────
+  let autoAdvance      = false;
+  let skipAll          = false;       // when true, skip plays past unread lines too
+  let autoAdvanceTimer = null;
+  let currentTextEventIdx = -1;       // set on each text event; used for visited+backlog
+  const AUTO_ADVANCE_DELAY = 1800;    // ms pause after text finishes
+  const SKIP_DELAY         = 40;      // ms between lines in skip mode
+
+  function cancelAutoAdvance() {
+    if (autoAdvanceTimer) { clearTimeout(autoAdvanceTimer); autoAdvanceTimer = null; }
+  }
+  function scheduleAutoAdvance(source) {
+    cancelAutoAdvance();
+    if (evidenceSelectPending) return;
+    const shouldAdvance = skipping || autoAdvance;
+    if (!shouldAdvance) return;
+    // wait_click is scene-setup — shorter pause so skip/auto flow through scenes
+    const delay = skipping
+      ? SKIP_DELAY
+      : (source === 'wait_click' ? 400 : AUTO_ADVANCE_DELAY);
+    autoAdvanceTimer = setTimeout(() => {
+      autoAdvanceTimer = null;
+      if (waitingClick) container.click();
+    }, delay);
+  }
+
   // ── Audio ─────────────────────────────────────────
   // One-shot sound effects (UI interactions)
   function playSE(name) {
-    if (!name) return;
-    try { new Audio(ASSET.se(name)).play().catch(() => {}); } catch(e) {}
+    if (!name || Settings.get('muted')) return;
+    try {
+      const a = new Audio(ASSET.se(name));
+      a.volume = Settings.get('seVolume');
+      a.play().catch(() => {});
+    } catch(e) {}
   }
 
   // Game SFX from script events
   function playSound(file) {
-    if (!file) return;
-    try { new Audio(ASSET.se(file)).play().catch(() => {}); } catch(e) {}
+    if (!file || Settings.get('muted')) return;
+    try {
+      const a = new Audio(ASSET.se(file));
+      a.volume = Settings.get('seVolume');
+      a.play().catch(() => {});
+    } catch(e) {}
   }
 
   function playBGM(file) {
@@ -784,7 +904,7 @@ const VN = (() => {
     currentBgmFile = file;
     bgmEl = new Audio(ASSET.bgm(file));
     bgmEl.loop = true;
-    bgmEl.volume = 0.45;
+    bgmEl.volume = Settings.get('muted') ? 0 : Settings.get('bgmVolume');
     bgmEl.play().catch(() => {});
   }
 
@@ -825,7 +945,6 @@ const VN = (() => {
   let typeTimer  = null;
   let fullText   = '';
   let charIdx    = 0;
-  const TYPE_SPEED = 25;
 
   function showText(text, jp, zh) {
     let display;
@@ -858,10 +977,21 @@ const VN = (() => {
     if (charIdx >= fullText.length) {
       clickInd.style.display = 'block';
       playSE('read');     // soft chime when typing finishes
+      scheduleAutoAdvance('text');
+      return;
+    }
+    const speed = skipping ? 0 : Settings.get('textSpeed');
+    // Instant mode: render the whole remaining line in one shot
+    if (speed === 0 && !skipping) {
+      dialogueEl.textContent = fullText;
+      charIdx = fullText.length;
+      clickInd.style.display = 'block';
+      playSE('read');
+      scheduleAutoAdvance('text');
       return;
     }
     dialogueEl.textContent += fullText[charIdx++];
-    typeTimer = setTimeout(typeNextChar, skipping ? 0 : TYPE_SPEED);
+    typeTimer = setTimeout(typeNextChar, speed);
   }
 
   function finishTyping() {
@@ -900,6 +1030,15 @@ const VN = (() => {
           // sections — it should never be displayed as dialogue text.
           if (rawJp.trim() === '\u9E5A') break;
 
+          // Track this text event's index (cursor was incremented pre-switch)
+          currentTextEventIdx = cursor - 1;
+          pushBacklog(currentScript, currentTextEventIdx, ev);
+          // Skip-read: stop skipping before showing an unread line
+          if (skipping && !skipAll && !Visited.has(currentScript, currentTextEventIdx)) {
+            skipping = false;
+            cancelAutoAdvance();
+          }
+
           const loads = pendingLoads.splice(0);
           const doShow = async () => {
             await renderTextbox();
@@ -916,6 +1055,7 @@ const VN = (() => {
           waitSource   = 'wait_click';
           waitingClick = true;
           updateStatus();
+          scheduleAutoAdvance('wait_click');
           return;
 
         case 'load_image':
@@ -972,6 +1112,16 @@ const VN = (() => {
             evidenceSelectPending = true;
             evidenceCorrectCursor = findEvidenceCorrectCursor(cursor);
             evHint.style.display = 'block';  // show amber hint bar
+            // Distinguish acquisition notification (play_sound before wait_click)
+            // from presentation challenge (no play_sound before wait_click).
+            // Acquisition: color_fade → play_sound → wait_click → "filed" text → continue
+            // Presentation: color_fade → wait_click → instruction text → WAIT for player
+            evidenceIsAcquisition = false;
+            for (let k = cursor; k < Math.min(cursor + 8, events.length); k++) {
+              const nop = events[k].op;
+              if (nop === 'play_sound') { evidenceIsAcquisition = true; break; }
+              if (nop === 'wait_click' || nop === 'text') break;
+            }
           }
           break;
 
@@ -1073,10 +1223,13 @@ const VN = (() => {
   // ── Click / keyboard ──────────────────────────────
   container.addEventListener('click', () => {
     if (!waitingClick) return;
+    cancelAutoAdvance();
 
     if (waitSource === 'text') {
       if (!finishTyping()) return;
       playSE('click');    // click-advance sound
+      // Player advanced past this text → mark as read
+      if (currentTextEventIdx >= 0) Visited.mark(currentScript, currentTextEventIdx);
       textbox.style.display = 'none';
       portCanvas.style.display = 'none';  // hide portrait WITH textbox
       dialogueEl.textContent = '';
@@ -1085,15 +1238,25 @@ const VN = (() => {
       // Portrait is only truly reset when textwinc/mind loads (clearPortrait).
       nextTextColor = '#e8eeff';
 
-      // If an evidence-present puzzle is active, this text event was the
-      // instruction prompt.  Stay suspended here — do NOT advance the script.
-      // Update evidenceCorrectCursor to the current cursor (right after the
-      // instruction text) so presentEvidence() resumes from the correct place.
+      // If an evidence-present puzzle is active, check whether this is an
+      // item-acquisition notification (evidenceIsAcquisition=true) or a real
+      // presentation challenge (evidenceIsAcquisition=false).
+      //
+      // Acquisition: "証拠品ファイルしました" — just clear the flag and continue.
+      // Presentation: instruction text — stay suspended until player presents evidence.
       if (evidenceSelectPending) {
         evidenceCorrectCursor = cursor;
-        waitingClick = false;
-        waitSource   = null;
-        return;   // ← engine stays suspended; player must present evidence
+        if (evidenceIsAcquisition) {
+          // Filed-notification path — clear and fall through to execute()
+          evidenceSelectPending = false;
+          evidenceIsAcquisition = false;
+          evHint.style.display  = 'none';
+        } else {
+          // Presentation-challenge path — stay suspended
+          waitingClick = false;
+          waitSource   = null;
+          return;   // ← engine stays suspended; player must present evidence
+        }
       }
     }
     // wait_click: no SE, no portrait change — just advance scene setup
@@ -1102,6 +1265,14 @@ const VN = (() => {
     waitSource   = null;
     execute();
   });
+
+  // Scroll-wheel UP on game → open backlog (classic VN gesture)
+  container.addEventListener('wheel', e => {
+    if (e.deltaY < 0) {
+      e.preventDefault();
+      if (typeof window._openBacklog === 'function') window._openBacklog();
+    }
+  }, { passive: false });
 
   // Right-click on game → open coat menu (evidence/notes access)
   container.addEventListener('contextmenu', e => {
@@ -1127,6 +1298,25 @@ const VN = (() => {
   });
 
   document.addEventListener('keydown', e => {
+    // Esc — in-game: pause menu; elsewhere: settings panel
+    if (e.code === 'Escape') {
+      e.preventDefault();
+      const inGame = container && container.style.display !== 'none';
+      if (inGame && typeof window._togglePauseMenu === 'function') {
+        window._togglePauseMenu();
+      } else if (typeof window._toggleSettings === 'function') {
+        window._toggleSettings();
+      }
+      return;
+    }
+    // While any modal is open, swallow game-level keys
+    const sp = document.getElementById('settings-panel');
+    const pm = document.getElementById('pause-menu');
+    const sl = document.getElementById('saveload-panel');
+    if ((sp && sp.style.display === 'flex') ||
+        (pm && pm.style.display === 'flex') ||
+        (sl && sl.style.display === 'flex')) return;
+
     if (e.code === 'Space' || e.code === 'Enter') {
       e.preventDefault();
       // If coat menu is open, close it first; then advance dialogue if waiting
@@ -1140,7 +1330,24 @@ const VN = (() => {
     }
     if (e.code === 'KeyS') {
       skipping = !skipping;
-      if (skipping && waitingClick) container.click();
+      skipAll  = skipping && e.shiftKey;   // Shift+S = skip unread too
+      if (!skipping) cancelAutoAdvance();
+      updateStatus();
+      if (skipping && waitingClick) {
+        // If already waiting on a read line, advance now
+        if (waitSource === 'text' && (skipAll || Visited.has(currentScript, currentTextEventIdx))) {
+          container.click();
+        }
+      }
+    }
+    if (e.code === 'KeyA') {
+      autoAdvance = !autoAdvance;
+      if (!autoAdvance) cancelAutoAdvance();
+      else if (waitingClick && waitSource === 'text') scheduleAutoAdvance('text');
+      updateStatus();
+    }
+    if (e.code === 'KeyB') {
+      if (typeof window._toggleBacklog === 'function') window._toggleBacklog();
     }
     // '1' key → toggle coat menu (matches original PSG engine binding)
     if (e.code === 'Digit1') {
@@ -1361,7 +1568,7 @@ const VN = (() => {
   // ── Script loader ─────────────────────────────────
   // preserveInventory=true when transitioning via goto_script (story continues);
   // false when the player manually restarts or returns to menu (fresh start).
-  async function loadScript(name, preserveInventory = false) {
+  async function loadScript(name, preserveInventory = false, skipExecute = false) {
     currentScript = name;
     updateStatus(`Loading ${name}...`);
     // Clear all canvases so no previous scene bleeds into the new script
@@ -1382,6 +1589,7 @@ const VN = (() => {
     hideCoatMenu();
     hideEvidenceBook();
     evidenceSelectPending = false;
+    evidenceIsAcquisition = false;
     evidenceCorrectCursor = -1;
     if (!preserveInventory) evidenceInventory = [];
     evBookView       = 'overview';
@@ -1403,11 +1611,169 @@ const VN = (() => {
       waitingClick = false;
       waitSource   = null;
       skipping = false;
-      execute();
+      if (!skipExecute) execute();
     } catch (err) {
       updateStatus(`Error: ${err.message}`);
     }
   }
+
+  // ── Fast-forward replay ──────────────────────────
+  // Walks the event list from 0 up to `target`, re-applying state-mutating
+  // ops (images, BGM, portrait side, colour) but skipping user-interactive
+  // ones (text display, waits, fades, choices). Used by Saves.restore() to
+  // rebuild the scene at a saved cursor without playing through the script.
+  async function fastForwardTo(target) {
+    let ff = 0;
+    const max = Math.min(target, events.length);
+    while (ff < max) {
+      const ev = events[ff];
+      ff++;
+      switch (ev.op) {
+        case 'load_image':
+          loadImage(ev.name);
+          break;
+        case 'load_ui': {
+          const n = (ev.name || '').toLowerCase();
+          if (n === 'l_wins')        portraitSide = 'right';
+          else if (n === 'textwins') portraitSide = 'left';
+          else if (n === 'mind')     clearItemCanvas();
+          break;
+        }
+        case 'set_layer':
+          currentLayer = ev.layer;
+          break;
+        case 'color_fade':
+          nextTextColor = `rgb(${ev.r},${ev.g},${ev.b})`;
+          break;
+        case 'load_bgm': {
+          const f = ev.file || '';
+          if (f.length === 1) {
+            const idx = f.charCodeAt(0);
+            if (idx >= 1 && idx <= 15) playBGM(`han_${String(idx).padStart(2,'0')}`);
+            else if (idx === 0) stopBGM();
+          } else if (f.length > 1) {
+            playBGM(f);
+          }
+          break;
+        }
+        case 'text':
+        case 'wait_click': {
+          // Drain queued image loads (as real execute does at text boundaries)
+          const pending = pendingLoads.splice(0);
+          if (pending.length) await Promise.all(pending);
+          break;
+        }
+        // Deliberately skipped: fade, wait, play_sound, set_flag,
+        // choice_begin, goto_script, jump, play_bgm
+      }
+    }
+    const leftover = pendingLoads.splice(0);
+    if (leftover.length) await Promise.all(leftover);
+  }
+
+  // ── Saves (persisted to localStorage) ────────────
+  // Eight slots: auto, quick, and 1–6. Each save captures script/cursor/
+  // inventory/language plus a thumbnail of the current scene and a short
+  // dialogue preview so the Load UI can render informative cards.
+  const SAVE_KEY_PREFIX = 'tsuki.save.v1.';
+  const SAVE_SLOTS = ['auto', 'quick', '1', '2', '3', '4', '5', '6'];
+  const Saves = (() => {
+    const key = slot => SAVE_KEY_PREFIX + slot;
+
+    function canSave() {
+      return waitingClick
+        && waitSource === 'text'
+        && !evidenceSelectPending
+        && choiceMenu.style.display !== 'flex'
+        && !!currentScript;
+    }
+
+    function snapshot() {
+      const tmp = document.createElement('canvas');
+      tmp.width = 160; tmp.height = 120;
+      const ctx = tmp.getContext('2d');
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, 160, 120);
+      try {
+        ctx.drawImage(bgCanvas,   0, 0, 160, 120);
+        ctx.drawImage(sprCanvas,  0, 0, 160, 120);
+        ctx.drawImage(itemCanvas, 0, 0, 160, 120);
+      } catch (e) {}
+      try { return tmp.toDataURL('image/jpeg', 0.6); } catch (e) { return ''; }
+    }
+
+    function build() {
+      // Point the saved cursor AT the last text event so it re-renders on load.
+      let saveCursor = cursor;
+      let preview = '';
+      for (let i = Math.min(cursor, events.length) - 1; i >= 0; i--) {
+        const ev = events[i];
+        if (ev && ev.op === 'text') {
+          saveCursor = i;
+          const t = ev.jp || ev.text || '';
+          preview = t.replace(/[\x00-\x1f]/g, '').replace(/!s|@/g, '').slice(0, 60);
+          break;
+        }
+      }
+      return {
+        scriptName: currentScript,
+        cursor: saveCursor,
+        evidenceInventory: [...evidenceInventory],
+        lang: currentLang,
+        timestamp: Date.now(),
+        thumbnail: snapshot(),
+        preview,
+      };
+    }
+
+    function write(slot) {
+      if (!canSave()) return false;
+      try {
+        localStorage.setItem(key(slot), JSON.stringify(build()));
+        return true;
+      } catch (e) {
+        console.error('Save failed:', e);
+        return false;
+      }
+    }
+
+    function read(slot) {
+      const raw = localStorage.getItem(key(slot));
+      if (!raw) return null;
+      try { return JSON.parse(raw); } catch (e) { return null; }
+    }
+
+    function erase(slot) { localStorage.removeItem(key(slot)); }
+
+    function list() {
+      return SAVE_SLOTS.map(slot => ({ slot, data: read(slot) }));
+    }
+
+    async function restore(slot) {
+      const data = read(slot);
+      if (!data || !data.scriptName) return false;
+      // Reset engine: stop audio, clear fades, then load script without executing.
+      stopBGM();
+      await loadScript(data.scriptName, false, /*skipExecute*/ true);
+      currentLang = data.lang || 'jp';
+      if (langSel) langSel.value = currentLang;
+      evidenceInventory = Array.isArray(data.evidenceInventory)
+        ? [...data.evidenceInventory] : [];
+      await fastForwardTo(data.cursor);
+      // Reveal the rebuilt scene instantly
+      fadeOverlay.style.transition = 'none';
+      fadeOverlay.style.opacity    = '0';
+      cursor       = data.cursor;
+      waitingClick = false;
+      waitSource   = null;
+      skipping     = false;
+      if (scriptSel) scriptSel.value = data.scriptName;
+      execute();
+      return true;
+    }
+
+    return { slots: SAVE_SLOTS, canSave, write, read, erase, list, restore, build };
+  })();
 
   function updateStatus(msg) {
     if (msg !== undefined) {
@@ -1417,14 +1783,29 @@ const VN = (() => {
     if (evidenceSelectPending) {
       statusEl.textContent =
         `⚠ 出示证据阶段：右键/[1] 打开菜单 → 证拠品一覧 → 选择证据 → つきつける`;
-    } else {
-      statusEl.textContent =
-        `Playing: ${scriptSel.value} | 点击/[Space] 推进 | 右键/[1] 菜单 | [S] 跳过`;
+      return;
     }
+    const tags = [];
+    if (skipping)    tags.push(skipAll ? '⏭ SKIP-ALL' : '⏭ SKIP');
+    if (autoAdvance) tags.push('▶ AUTO');
+    const prefix = tags.length ? `[${tags.join(' ')}] ` : '';
+    statusEl.textContent =
+      `${prefix}Playing: ${scriptSel.value} | 点击/[Space] 推进 | 右键/[1] 菜单 | [S] 跳过 | [A] 自动 | [B] 记录`;
   }
+
+  // Apply persisted settings once at startup (font-size now, audio on next BGM load)
+  Settings.applyAll();
 
   // ── Public API ────────────────────────────────────
   return {
+    settings: Settings,
+    saves:    Saves,
+    visited:  Visited,
+    getBacklog: () => backlog.slice(),
+    setAutoAdvance(on) { autoAdvance = !!on; if (!autoAdvance) cancelAutoAdvance();
+      else if (waitingClick && waitSource === 'text') scheduleAutoAdvance('text');
+      updateStatus(); },
+    isAutoAdvance: () => autoAdvance,
     restart() {
       currentLang = langSel.value;
       loadScript(scriptSel.value);
@@ -1446,6 +1827,7 @@ const VN = (() => {
       hideCoatMenu();
       hideEvidenceBook();
       evidenceSelectPending = false;
+      evidenceIsAcquisition = false;
       evidenceCorrectCursor = -1;
       evidenceInventory     = [];
       evBookView       = 'overview';

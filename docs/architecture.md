@@ -270,12 +270,69 @@ Any element with a `data-tip` attribute gets a styled tooltip on hover. The `#vn
 
 ---
 
+## Player UX layer (Settings / Save / Backlog / Skip / Auto)
+
+Three IIFE-scoped modules added on top of the core engine; all backed by `localStorage`.
+
+### Settings (`tsuki.settings.v1`)
+Keys: `textSpeed` (ms/char, `0` = instant render), `bgmVolume`, `seVolume`, `muted`, `fontSize`, `autoAdvanceDelay`. `Settings.get/set/all/applyAll`. Audio modules (`playBGM`, `playSound`, `playSE`) honour `muted` + volume keys; `typeNextChar` reads `Settings.get('textSpeed')` per-char and takes an instant-render path when speed is 0.
+
+### Saves (`tsuki.save.v1.<id>`)
+8 slots: `auto`, `quick`, `1`–`6`. Save shape:
+
+```js
+{ scriptName, cursor, evidenceInventory, lang, timestamp, thumbnail, preview }
+```
+
+`thumbnail` is a JPEG `toDataURL` snapshot of `#bg-canvas` + `#sprite-canvas` + `#portrait-canvas` composited. `preview` is the last dialogue line (pre-format-code strip).
+
+**Save guard**: `Saves.canSave()` returns `waitingClick && waitSource === 'text' && !evidenceSelectPending`. This guarantees the saved `cursor` points AT a dismissible text event (not inside a fade, not mid-choice, not during evidence selection).
+
+**Load flow**: `loadScript(name, preserveInventory=true, skipExecute=true)` → `fastForwardTo(cursor)` → final `execute()` re-shows the saved text line.
+
+**`fastForwardTo(target)`** walks events 0 → target, re-applying state-only ops (`load_image`, `load_ui`, `set_layer`, `color_fade`, `load_bgm`) and draining `pendingLoads` at each `text` / `wait_click` boundary. User-interactive ops (`text`, `choice`, `wait`, `fade`) are skipped — dialogue is not replayed, BGM switches take effect, the final scene matches what was on screen when the save was taken.
+
+### Visited (`tsuki.visited.v1`)
+`Set<"script:idx">` of every text event the player has seen. Debounced flush (600 ms) + `beforeunload` flush to avoid localStorage hammering during skip-all. Used by skip-read to stop on unread lines.
+
+### Backlog
+In-memory ring buffer (`BACKLOG_MAX = 200`), not persisted. Each text event pushes `{script, idx, jp, text, zh, color}`; consecutive identical entries are deduped. Rendered by `#backlog-panel` with language-aware text selection (`pickBacklogText(entry, lang)`).
+
+### Auto-advance / skip state machine
+
+```
+                   scheduleAutoAdvance(source)
+                  ┌──────────────────────────┐
+                  │ if evidenceSelectPending │
+  text event      │   return                 │
+  completes   ───▶│ delay =                  │
+                  │   skipping   → 40ms      │
+  wait_click      │   wait_click → 400ms     │
+  enters      ───▶│   default    → 1800ms    │
+                  │ setTimeout(() => click)  │
+                  └──────────────────────────┘
+                              ▲
+  user click / modal open  ───┘  (cancelAutoAdvance)
+```
+
+**Skip-read** (`S`): stops on any event where `!Visited.has(script, idx)`.
+**Skip-all** (`Shift+S`): continues through unread lines. Both use the same 40 ms cadence via `SKIP_DELAY`.
+
+### Modal key-swallowing
+
+The document-level `keydown` handler checks `#settings-panel`, `#pause-menu`, `#saveload-panel`, `#backlog-panel` — if any is visible, it returns early so Space/Enter/S/A/B/1 don't leak through to the game underneath. Each panel's own handlers are attached directly to its buttons.
+
+---
+
 ## Known limitations / future work
 
 | Area | Status |
 |------|--------|
 | Video playback | MPG files not browser-compatible; needs ffmpeg conversion + `<video>` integration |
-| Save / Load | Not implemented |
+| Fullscreen / scaling | Not implemented (Phase 4) |
+| Keybinding help overlay | Not implemented (Phase 4) |
+| Choice visited-state | Not marked in choice menu (Phase 4) |
+| Gallery / jukebox | Not implemented (Phase 5) |
 | `set_flag` / branching flags | Events parsed but values not tracked |
 | `load_ui mind` | `mind.jpg` is a 640×480 thought overlay — not yet rendered |
 | Evidence 3-item combination | Haruka puzzle requires 3 correct items; web player accepts any single item (PSG flag state not tracked) |
