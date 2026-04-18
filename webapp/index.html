@@ -5,6 +5,7 @@
   <title>月ノ裁 / Tsuki no Sabaki</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
     body {
       background: #000;
       display: flex;
@@ -13,11 +14,35 @@
       justify-content: center;
       min-height: 100vh;
       font-family: 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      overflow: hidden;
+    }
+
+    /* ── Scaling wrapper ──────────────────────────────
+       All three screens live inside #stage; JS computes a CSS transform
+       that scales 640×480 to the largest 4:3 rectangle the viewport holds.
+       Fullscreen API targets #stage-outer so the black letterbox fills
+       the monitor.                                                       */
+    #stage-outer {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+    #stage {
+      position: relative;
+      width: 640px;
+      height: 480px;
+      transform-origin: center center;
+      flex-shrink: 0;
     }
 
     /* ── Shared screen size ───────────────────────── */
     .screen {
-      position: relative;
+      position: absolute;
+      inset: 0;
       width: 640px;
       height: 480px;
       overflow: hidden;
@@ -163,6 +188,21 @@
       background: linear-gradient(180deg, #7a3e18 0%, #5a2e10 60%, #3d1e08 100%);
       border-color: #c87840;
       color: #ffe8b0;
+    }
+    /* Branches the player has already picked are softened (muted gold text,
+       a small checkmark in the corner) — the option is still pickable.   */
+    .choice-btn.choice-visited {
+      color: #a89060;
+      border-color: #5a3a1c;
+      position: relative;
+    }
+    .choice-btn.choice-visited::after {
+      content: '✓';
+      position: absolute;
+      top: 4px; right: 10px;
+      font-size: 14px;
+      color: #8fbf60;
+      opacity: 0.75;
     }
 
     /* ── Evidence-pending hint bar ───────────────────
@@ -470,6 +510,275 @@
       color: #ffe8b0;
     }
 
+    /* ── Help / Keybinding modal ───────────────────── */
+    #help-panel {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.78);
+      z-index: 104;
+      display: none;
+      align-items: center; justify-content: center;
+      font-family: 'Hiragino Sans', 'Noto Sans JP', 'Segoe UI', sans-serif;
+    }
+    #help-panel .help-card {
+      background: linear-gradient(180deg, #2a1a10 0%, #1a0d06 100%);
+      border: 2px solid #7a4820;
+      border-radius: 8px;
+      padding: 20px 24px 16px;
+      width: 520px;
+      max-height: 88vh;
+      color: #f0d8a0;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,220,140,0.1);
+      display: flex; flex-direction: column;
+    }
+    #help-panel h2 {
+      margin: 0 0 14px;
+      text-align: center;
+      font-size: 18px;
+      letter-spacing: 0.1em;
+      color: #ffe8b0;
+      font-weight: normal;
+    }
+    #help-panel table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      color: #e8d8b0;
+    }
+    #help-panel td {
+      padding: 6px 8px;
+      border-bottom: 1px dashed rgba(122,72,32,0.3);
+      vertical-align: middle;
+    }
+    #help-panel td:first-child {
+      width: 140px;
+      color: #ffe0a0;
+    }
+    #help-panel kbd {
+      display: inline-block;
+      background: #2a1a10;
+      border: 1px solid #7a4820;
+      border-radius: 3px;
+      padding: 2px 7px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: #ffe8b0;
+      margin-right: 4px;
+    }
+    #help-panel .help-footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 14px;
+    }
+    #help-close {
+      background: linear-gradient(180deg, #5a2e10 0%, #3d1e08 100%);
+      border: 2px solid #7a4820;
+      border-radius: 4px;
+      color: #f0d8a0;
+      padding: 6px 22px;
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+    }
+    #help-close:hover {
+      background: linear-gradient(180deg, #7a3e18 0%, #5a2e10 100%);
+      border-color: #c87840;
+    }
+
+    /* ── Gallery panel (CG + BGM jukebox) ─────────── */
+    #gallery-panel {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 105;
+      display: none;
+      align-items: center; justify-content: center;
+      font-family: 'Hiragino Sans', 'Noto Sans JP', 'Segoe UI', sans-serif;
+    }
+    #gallery-panel .gal-card {
+      background: linear-gradient(180deg, #2a1a10 0%, #1a0d06 100%);
+      border: 2px solid #7a4820;
+      border-radius: 8px;
+      padding: 16px 20px 14px;
+      width: min(860px, 94vw);
+      max-height: 90vh;
+      display: flex; flex-direction: column;
+      color: #f0d8a0;
+      box-shadow: 0 4px 28px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,220,140,0.1);
+    }
+    #gallery-panel h2 {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 18px;
+      letter-spacing: 0.1em;
+      color: #ffe8b0;
+      font-weight: normal;
+    }
+    .gal-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #5a2e10;
+    }
+    .gal-tab {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: #a8906a;
+      font-family: inherit;
+      font-size: 14px;
+      padding: 6px 18px;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+    }
+    .gal-tab:hover { color: #e8d8b0; }
+    .gal-tab.active {
+      color: #ffe8b0;
+      border-bottom-color: #c87840;
+    }
+    .gal-body {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 260px;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid #3d1e08;
+      border-radius: 4px;
+      padding: 12px;
+    }
+    .gal-empty {
+      color: #8f7a50;
+      text-align: center;
+      padding: 60px 0;
+      font-size: 13px;
+    }
+    /* CG Gallery grid */
+    #gal-cg-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 8px;
+    }
+    .gal-cg-cell {
+      position: relative;
+      aspect-ratio: 4 / 3;
+      background: #000;
+      border: 1px solid #5a2e10;
+      border-radius: 3px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.1s, transform 0.1s;
+    }
+    .gal-cg-cell:hover {
+      border-color: #c87840;
+      transform: scale(1.02);
+    }
+    .gal-cg-cell img {
+      width: 100%; height: 100%; object-fit: cover;
+      display: block;
+    }
+    .gal-cg-label {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      background: linear-gradient(0deg, rgba(0,0,0,0.85), transparent);
+      color: #f0d8a0;
+      font-size: 10px;
+      padding: 8px 6px 4px;
+      text-align: center;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.03em;
+    }
+    /* CG fullscreen preview */
+    #gal-cg-preview {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.95);
+      z-index: 106;
+      display: none;
+      align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+    #gal-cg-preview img {
+      max-width: 96vw;
+      max-height: 96vh;
+      object-fit: contain;
+      box-shadow: 0 0 40px rgba(0,0,0,0.9);
+    }
+    /* BGM jukebox list */
+    .gal-bgm-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 10px;
+      border-bottom: 1px dashed rgba(122,72,32,0.3);
+      font-size: 13px;
+    }
+    .gal-bgm-row:last-child { border-bottom: none; }
+    .gal-bgm-row.playing {
+      background: rgba(200,120,64,0.12);
+      color: #ffe8b0;
+    }
+    .gal-bgm-name {
+      flex: 1;
+      font-family: 'Courier New', monospace;
+      color: #e8d8b0;
+    }
+    .gal-bgm-play, .gal-bgm-stop {
+      background: linear-gradient(180deg, #5a2e10 0%, #3d1e08 100%);
+      border: 1px solid #7a4820;
+      border-radius: 3px;
+      color: #f0d8a0;
+      padding: 4px 14px;
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .gal-bgm-play:hover, .gal-bgm-stop:hover {
+      background: linear-gradient(180deg, #7a3e18 0%, #5a2e10 100%);
+      border-color: #c87840;
+    }
+    .gal-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      font-size: 11px;
+      color: #c8a860;
+    }
+    #gal-close {
+      background: linear-gradient(180deg, #5a2e10 0%, #3d1e08 100%);
+      border: 2px solid #7a4820;
+      border-radius: 4px;
+      color: #f0d8a0;
+      padding: 6px 22px;
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+    }
+    #gal-close:hover {
+      background: linear-gradient(180deg, #7a3e18 0%, #5a2e10 100%);
+      border-color: #c87840;
+    }
+
+    /* Small floating Gallery button on main menu */
+    #menu-gallery-btn {
+      position: absolute;
+      left: 14px; bottom: 14px;
+      z-index: 5;
+      background: linear-gradient(180deg, #5a2e10 0%, #3d1e08 100%);
+      border: 2px solid #7a4820;
+      border-radius: 4px;
+      color: #f0d8a0;
+      padding: 6px 16px;
+      font-size: 12px;
+      font-family: 'Hiragino Sans', 'Noto Sans JP', inherit;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      opacity: 0.85;
+    }
+    #menu-gallery-btn:hover {
+      opacity: 1;
+      background: linear-gradient(180deg, #7a3e18 0%, #5a2e10 100%);
+      border-color: #c87840;
+    }
+
     /* ── Backlog panel (dialogue history) ─────────── */
     #backlog-panel {
       position: fixed; inset: 0;
@@ -543,6 +852,9 @@
 </head>
 <body>
 
+<div id="stage-outer">
+<div id="stage">
+
 <!-- ════════════════════════════════════════════════
      MAIN MENU
      Buttons (estimated from han_t_02_off.jpg 640×480):
@@ -557,6 +869,7 @@
   <div class="menu-hotspot" id="menu-load"   style="left:425px;top:320px;width:195px;height:45px;"></div>
   <div class="menu-hotspot" id="menu-option" style="left:425px;top:368px;width:195px;height:45px;"></div>
   <div class="menu-hotspot" id="menu-exit"   style="left:425px;top:416px;width:195px;height:45px;"></div>
+  <button id="menu-gallery-btn">ギャラリー / Gallery</button>
 </div>
 
 <!-- ════════════════════════════════════════════════
@@ -671,6 +984,9 @@
   </video>
 </div>
 
+</div><!-- /#stage -->
+</div><!-- /#stage-outer -->
+
 <!-- ── Dev controls (shown while game is running) ── -->
 <div id="controls">
   <label>Script:</label>
@@ -699,10 +1015,54 @@
     <button class="pm-btn" id="pm-load">ロード / Load</button>
     <button class="pm-btn" id="pm-log">記録 / Backlog</button>
     <button class="pm-btn" id="pm-settings">設定 / Settings</button>
+    <button class="pm-btn" id="pm-help">操作説明 / Help</button>
+    <button class="pm-btn" id="pm-gallery">ギャラリー / Gallery</button>
     <button class="pm-btn" id="pm-title">タイトルへ / Main Menu</button>
     <button class="pm-btn" id="pm-resume">戻る / Resume</button>
   </div>
 </div>
+
+<!-- ════════════════════════════════════════════════
+     HELP / KEYBINDING PANEL
+═════════════════════════════════════════════════ -->
+<div id="help-panel">
+  <div class="help-card">
+    <h2>操作説明 / Controls</h2>
+    <table>
+      <tr><td>推进对话</td>          <td><kbd>Click</kbd> <kbd>Space</kbd> <kbd>Enter</kbd></td></tr>
+      <tr><td>暂停菜单</td>          <td><kbd>Esc</kbd></td></tr>
+      <tr><td>跳过已读</td>          <td><kbd>S</kbd></td></tr>
+      <tr><td>跳过全部</td>          <td><kbd>Shift</kbd>+<kbd>S</kbd></td></tr>
+      <tr><td>自动推进</td>          <td><kbd>A</kbd></td></tr>
+      <tr><td>记录 / Backlog</td>    <td><kbd>B</kbd> · 向上滚轮</td></tr>
+      <tr><td>全屏切换</td>          <td><kbd>F</kbd></td></tr>
+      <tr><td>操作説明 / Help</td>   <td><kbd>?</kbd></td></tr>
+      <tr><td>コートメニュー</td>    <td><kbd>1</kbd> · 右クリック</td></tr>
+    </table>
+    <div class="help-footer">
+      <button id="help-close">閉じる / Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     GALLERY PANEL (CG grid + BGM jukebox)
+═════════════════════════════════════════════════ -->
+<div id="gallery-panel">
+  <div class="gal-card">
+    <h2>ギャラリー / Gallery</h2>
+    <div class="gal-tabs">
+      <button class="gal-tab active" data-tab="cg">CG</button>
+      <button class="gal-tab" data-tab="bgm">BGM</button>
+    </div>
+    <div class="gal-body" id="gal-body"></div>
+    <div class="gal-footer">
+      <span id="gal-count"></span>
+      <button id="gal-close">閉じる / Close</button>
+    </div>
+  </div>
+</div>
+<div id="gal-cg-preview"><img id="gal-cg-preview-img" alt=""></div>
 
 <!-- ════════════════════════════════════════════════
      BACKLOG PANEL (dialogue history)
@@ -785,6 +1145,43 @@
 
 <script src="engine/engine.js"></script>
 <script>
+  // ── Responsive scaling + fullscreen ────────────────
+  // Keeps the 640×480 coordinate system intact; only scales visually to fit.
+  const stageEl = document.getElementById('stage');
+  const stageOuterEl = document.getElementById('stage-outer');
+  const BASE_W = 640, BASE_H = 480;
+  function relayoutStage() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const scale = Math.max(0.25, Math.min(vw / BASE_W, vh / BASE_H));
+    stageEl.style.transform = `scale(${scale})`;
+  }
+  window.addEventListener('resize', relayoutStage);
+  document.addEventListener('fullscreenchange', relayoutStage);
+  document.addEventListener('webkitfullscreenchange', relayoutStage);
+  relayoutStage();
+
+  function toggleFullscreen() {
+    const el = stageOuterEl;
+    const isFs = document.fullscreenElement || document.webkitFullscreenElement;
+    if (isFs) {
+      (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    } else {
+      (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+    }
+  }
+  window._toggleFullscreen = toggleFullscreen;
+
+  document.addEventListener('keydown', e => {
+    // F toggles fullscreen — skip when focus is in an input or any modal typing
+    if (e.code === 'KeyF' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      e.preventDefault();
+      toggleFullscreen();
+    }
+  });
+
   // ── Populate script selector ──────────────────────
   const scripts = [
     's02_01','s02_02','s02_03','s02_04','s02_05','s02_06',
@@ -1160,6 +1557,138 @@
     if (e.target === blPanel) closeBacklog();
   });
   pmLog.addEventListener('click', () => { closePauseMenu(); openBacklog(); });
+
+  // ── Help modal wiring ─────────────────────────────
+  const helpPanel = document.getElementById('help-panel');
+  const helpClose = document.getElementById('help-close');
+  const pmHelp    = document.getElementById('pm-help');
+  function openHelp()  { helpPanel.style.display = 'flex'; }
+  function closeHelp() { helpPanel.style.display = 'none'; }
+  function toggleHelp() {
+    if (helpPanel.style.display === 'flex') closeHelp(); else openHelp();
+  }
+  window._toggleHelp = toggleHelp;
+  helpClose.addEventListener('click', closeHelp);
+  helpPanel.addEventListener('click', e => {
+    if (e.target === helpPanel) closeHelp();
+  });
+  pmHelp.addEventListener('click', () => { closePauseMenu(); openHelp(); });
+
+  // '?' key anywhere → toggle help
+  document.addEventListener('keydown', e => {
+    if ((e.key === '?' || (e.key === '/' && e.shiftKey)) && !e.ctrlKey && !e.metaKey) {
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      e.preventDefault();
+      toggleHelp();
+    }
+  });
+
+  // ── Gallery modal wiring ──────────────────────────
+  const galPanel  = document.getElementById('gallery-panel');
+  const galBody   = document.getElementById('gal-body');
+  const galCount  = document.getElementById('gal-count');
+  const galClose  = document.getElementById('gal-close');
+  const galTabs   = [...document.querySelectorAll('.gal-tab')];
+  const galPreview    = document.getElementById('gal-cg-preview');
+  const galPreviewImg = document.getElementById('gal-cg-preview-img');
+  const menuGalleryBtn = document.getElementById('menu-gallery-btn');
+  const pmGallery      = document.getElementById('pm-gallery');
+
+  let galTab = 'cg';
+  let galCurrentBgm = null;  // file currently previewing (for play/stop UI)
+
+  function renderGalCG() {
+    const bgs = VN.gallery.bgs();
+    galBody.innerHTML = '';
+    if (!bgs.length) {
+      galBody.innerHTML = '<div class="gal-empty">まだ解放されたCGがありません<br><span style="opacity:0.7">Play through the story to unlock CGs.</span></div>';
+      galCount.textContent = '0 CG';
+      return;
+    }
+    const grid = document.createElement('div');
+    grid.id = 'gal-cg-grid';
+    bgs.forEach(name => {
+      const cell = document.createElement('div');
+      cell.className = 'gal-cg-cell';
+      cell.title = name;
+      const img = document.createElement('img');
+      img.src = `assets/bg/${name}.jpg`;
+      img.alt = name;
+      img.loading = 'lazy';
+      cell.appendChild(img);
+      const label = document.createElement('div');
+      label.className = 'gal-cg-label';
+      label.textContent = name;
+      cell.appendChild(label);
+      cell.addEventListener('click', () => {
+        galPreviewImg.src = `assets/bg/${name}.jpg`;
+        galPreview.style.display = 'flex';
+      });
+      grid.appendChild(cell);
+    });
+    galBody.appendChild(grid);
+    galCount.textContent = `${bgs.length} CG`;
+  }
+
+  function renderGalBGM() {
+    const bgms = VN.gallery.bgms();
+    galBody.innerHTML = '';
+    if (!bgms.length) {
+      galBody.innerHTML = '<div class="gal-empty">まだ解放されたBGMがありません<br><span style="opacity:0.7">Play through the story to unlock BGM tracks.</span></div>';
+      galCount.textContent = '0 BGM';
+      return;
+    }
+    bgms.forEach(file => {
+      const row = document.createElement('div');
+      row.className = 'gal-bgm-row' + (file === galCurrentBgm ? ' playing' : '');
+      const name = document.createElement('div');
+      name.className = 'gal-bgm-name';
+      name.textContent = file;
+      const btn = document.createElement('button');
+      const isPlaying = file === galCurrentBgm;
+      btn.className = isPlaying ? 'gal-bgm-stop' : 'gal-bgm-play';
+      btn.textContent = isPlaying ? '■ Stop' : '▶ Play';
+      btn.addEventListener('click', () => {
+        if (isPlaying) {
+          VN.previewBGMStop();
+          galCurrentBgm = null;
+        } else {
+          VN.previewBGM(file);
+          galCurrentBgm = file;
+        }
+        renderGalBGM();
+      });
+      row.appendChild(name);
+      row.appendChild(btn);
+      galBody.appendChild(row);
+    });
+    galCount.textContent = `${bgms.length} BGM`;
+  }
+
+  function renderGallery() {
+    galTabs.forEach(t => t.classList.toggle('active', t.dataset.tab === galTab));
+    if (galTab === 'cg') renderGalCG(); else renderGalBGM();
+  }
+
+  function openGallery()  { galTab = 'cg'; renderGallery(); galPanel.style.display = 'flex'; }
+  function closeGallery() {
+    galPanel.style.display = 'none';
+    galPreview.style.display = 'none';
+    // Stop any jukebox preview on close so it doesn't keep playing
+    if (galCurrentBgm) { VN.previewBGMStop(); galCurrentBgm = null; }
+  }
+  window._openGallery = openGallery;
+
+  galTabs.forEach(t => t.addEventListener('click', () => {
+    galTab = t.dataset.tab;
+    renderGallery();
+  }));
+  galClose.addEventListener('click', closeGallery);
+  galPanel.addEventListener('click', e => { if (e.target === galPanel) closeGallery(); });
+  galPreview.addEventListener('click', () => { galPreview.style.display = 'none'; });
+  menuGalleryBtn.addEventListener('click', openGallery);
+  pmGallery.addEventListener('click', () => { closePauseMenu(); openGallery(); });
 </script>
 </body>
 </html>

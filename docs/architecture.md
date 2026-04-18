@@ -320,7 +320,42 @@ In-memory ring buffer (`BACKLOG_MAX = 200`), not persisted. Each text event push
 
 ### Modal key-swallowing
 
-The document-level `keydown` handler checks `#settings-panel`, `#pause-menu`, `#saveload-panel`, `#backlog-panel` — if any is visible, it returns early so Space/Enter/S/A/B/1 don't leak through to the game underneath. Each panel's own handlers are attached directly to its buttons.
+The document-level `keydown` handler checks `#settings-panel`, `#pause-menu`, `#saveload-panel`, `#backlog-panel`, `#help-panel`, `#gallery-panel` — if any is visible, it returns early so Space/Enter/S/A/B/1 don't leak through to the game underneath. Each panel's own handlers are attached directly to its buttons.
+
+### Responsive scaling (`#stage-outer` + `#stage`)
+
+All three screens (`#menu-screen`, `#chapter-screen`, `#game-container`) now live inside a nested wrapper:
+
+```
+body (overflow:hidden, flex-centered)
+ └── #stage-outer (100vw × 100vh, black letterbox)
+      └── #stage (640 × 480, CSS transform-scaled)
+           ├── #menu-screen (absolute, inset:0)
+           ├── #chapter-screen
+           └── #game-container
+```
+
+A JS listener computes `scale = min(innerWidth/640, innerHeight/480)` on `load`, `resize`, and `fullscreenchange`, then applies `#stage.style.transform = scale(N)`. The internal 640×480 coordinate system is preserved intact — pointer events map correctly through the transform, so all existing hotspots (coat menu, evidence book, choice buttons) work at any scale. `F` triggers `requestFullscreen()` on `#stage-outer` (webkit fallback).
+
+Dev-mode controls (`#controls`, `#status`) remain outside `#stage-outer` at native size — they only show with `display:flex`/`block` when explicitly toggled for debugging.
+
+### Choice visited-state
+
+`Visited` module extended with a parallel key space: `c:<script>:<choiceEvIdx>:<optIdx>`. Inside `execute()`'s `choice_begin` case, the engine passes `cursor - 1` (the index of the `choice_begin` event) to `showChoiceMenu(choices, choiceEvIdx)`. The renderer consults `Visited.hasChoice` to add the `.choice-visited` class; click handlers call `Visited.markChoice` before dispatching the branch. The CSS adds muted gold colour + a checkmark via `::after` — the option stays selectable so replays still work.
+
+### Gallery
+
+Parallel localStorage under `tsuki.gallery.v1` as `{bgs:[], bgms:[]}`. Unlocks are passive hooks:
+
+```
+drawBackground(name)  →  Gallery.unlockBG(name)
+playBGM(file)         →  Gallery.unlockBGM(file)
+```
+
+Both modules use the same debounced flush + `beforeunload` pattern as `Visited`. The UI:
+
+- **CG tab** — `grid-template-columns: repeat(auto-fill, minmax(180px, 1fr))`; each cell renders `assets/bg/<name>.jpg` via native `<img loading="lazy">`; click opens `#gal-cg-preview` (fullscreen 96vw/96vh).
+- **BGM tab** — flat list, one Play/Stop button per track. Only one track plays at a time (exposed via `VN.previewBGM` / `VN.previewBGMStop`, which reuse the engine's `playBGM`/`stopBGM` and therefore respect mute + bgmVolume). Closing the gallery stops any preview.
 
 ---
 
@@ -329,10 +364,8 @@ The document-level `keydown` handler checks `#settings-panel`, `#pause-menu`, `#
 | Area | Status |
 |------|--------|
 | Video playback | MPG files not browser-compatible; needs ffmpeg conversion + `<video>` integration |
-| Fullscreen / scaling | Not implemented (Phase 4) |
-| Keybinding help overlay | Not implemented (Phase 4) |
-| Choice visited-state | Not marked in choice menu (Phase 4) |
-| Gallery / jukebox | Not implemented (Phase 5) |
 | `set_flag` / branching flags | Events parsed but values not tracked |
 | `load_ui mind` | `mind.jpg` is a 640×480 thought overlay — not yet rendered |
 | Evidence 3-item combination | Haruka puzzle requires 3 correct items; web player accepts any single item (PSG flag state not tracked) |
+| Sprite gallery | Only BG + BGM are gallery-indexed today; full-body sprites (`han_<char>*`) are not surfaced |
+| Packaging | No PWA manifest / Electron / Tauri wrapper yet — runs as a static web app only |

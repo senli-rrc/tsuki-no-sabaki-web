@@ -154,7 +154,7 @@ The `#ev-present-btn` HTML overlay is positioned at `left:349px; top:4px; width:
 
 ---
 
-## Player UX features (Phase 1–3)
+## Player UX features (Phase 1–5)
 
 ### Settings (`Settings` module, IIFE)
 Persisted in `localStorage['tsuki.settings.v1']`. Keys: `textSpeed` (ms/char, `0` = instant), `bgmVolume`, `seVolume`, `muted`, `fontSize` (px), `autoAdvanceDelay`. Panel: `#settings-panel` (opened from main menu "Option", pause menu, or `Esc`). `Settings.applyAll()` re-applies settings (font size now; audio on next `playBGM`/`playSound`).
@@ -163,7 +163,7 @@ Persisted in `localStorage['tsuki.settings.v1']`. Keys: `textSpeed` (ms/char, `0
 8 slots in `localStorage['tsuki.save.v1.<id>']` where `id ∈ {auto, quick, 1-6}`. Shape: `{scriptName, cursor, evidenceInventory, lang, timestamp, thumbnail, preview}`. Saves are only allowed when `canSave()` is true (`waitingClick && waitSource==='text' && !evidenceSelectPending`) — this guarantees the saved cursor points AT a dismissible text event. Load uses `fastForwardTo(cursor)` to replay state ops (`load_image`, `load_ui`, `set_layer`, `color_fade`, `load_bgm`) from event 0 up to the cursor, draining `pendingLoads` at each text/`wait_click` boundary; user-interactive ops (`text`, `choice`, `wait`, `fade`) are skipped. Panel: `#saveload-panel` (load from main menu, save/load from pause menu).
 
 ### Pause menu
-Modal `#pause-menu` (Save / Load / Log / Settings / Main-Menu / Resume), opened with `Esc` in-game. Engine's `keydown` handler checks for any open modal (`#settings-panel`, `#pause-menu`, `#saveload-panel`, `#backlog-panel`) and returns early — modals swallow Space/Enter/S/A/B/1.
+Modal `#pause-menu` (Save / Load / Log / Settings / Help / Gallery / Main-Menu / Resume), opened with `Esc` in-game. Engine's `keydown` handler checks for any open modal (`#settings-panel`, `#pause-menu`, `#saveload-panel`, `#backlog-panel`, `#help-panel`, `#gallery-panel`) and returns early — modals swallow Space/Enter/S/A/B/1.
 
 ### Backlog (ring buffer, `BACKLOG_MAX=200`)
 Every `text` event pushes `{script, idx, jp, text, zh, color}` to the ring buffer. Dedup on consecutive identical entries. Opened with `B` key, scroll-wheel-up on `#game-container`, or pause menu → Log. Panel: `#backlog-panel`, renders per-entry language-aware text via `pickBacklogText(entry, lang)`.
@@ -179,6 +179,18 @@ Cancelled by `cancelAutoAdvance()` on any user click, modal open, or `evidenceSe
 ### Skip modes
 `S` = skip-read (stops on any line not in `Visited`); `Shift+S` = skip-all. `Visited` module tracks `{script, idx}` pairs in `localStorage['tsuki.visited.v1']` with 600 ms debounced flush + `beforeunload` flush. Every text render calls `Visited.mark(script, idx)`. Status line shows `[⏭ SKIP]`, `[⏭ SKIP-ALL]`, `[▶ AUTO]` tags.
 
+### Responsive scaling + fullscreen (Phase 4)
+All three screens live inside `#stage-outer > #stage`. A JS listener sets `#stage.style.transform = scale(min(vw/640, vh/480))` on load/resize/fullscreenchange, preserving the 640×480 coordinate system (clicks map correctly through the transform). `F` toggles fullscreen via the Fullscreen API (webkit fallback) on `#stage-outer` so the letterbox fills the monitor. Skip when focus is in an `<input>`/`<textarea>`/contentEditable.
+
+### Keybinding help (Phase 4)
+Modal `#help-panel` — 9-row shortcut table. Opened with `?`, pause menu "操作説明 / Help" button, or `window._toggleHelp()`.
+
+### Choice visited-state (Phase 4)
+`Visited.markChoice(script, choiceEvIdx, optIdx)` / `hasChoice(...)` stores keys `c:<script>:<choiceEvIdx>:<optIdx>` in the same localStorage set. `showChoiceMenu(choices, choiceEvIdx)` adds `.choice-visited` class (muted gold text + ✓ checkmark via `::after`) to already-picked options. Still clickable.
+
+### Gallery (Phase 5)
+`Gallery` module (`localStorage['tsuki.gallery.v1']`, shape `{bgs:[], bgms:[]}`). `drawBackground()` calls `Gallery.unlockBG(name)`; `playBGM()` calls `Gallery.unlockBGM(file)`. Modal `#gallery-panel` has two tabs: **CG** (responsive thumbnail grid; click → `#gal-cg-preview` fullscreen) and **BGM** (per-track Play/Stop buttons; one track at a time, highlighted row). Entry points: floating `ギャラリー / Gallery` button on main menu (`#menu-gallery-btn`, lower-left) and pause menu `pm-gallery`. Closing gallery stops any jukebox preview.
+
 ### Keybindings
 | Key | Action |
 |-----|--------|
@@ -188,15 +200,19 @@ Cancelled by `cancelAutoAdvance()` on any user click, modal open, or `evidenceSe
 | `Shift+S` | Toggle skip-all |
 | `A` | Toggle auto-advance |
 | `B` | Toggle backlog |
+| `F` | Toggle fullscreen |
+| `?` | Toggle help / keybinding overlay |
 | `1` / Right-click | Coat menu |
 | Scroll-wheel up (on game) | Open backlog |
 
 ### Public API (`window.VN`)
 - `VN.settings` — Settings module
 - `VN.saves` — Saves module (incl. `canSave()`, `save(slot)`, `load(slot)`, `list()`, `delete(slot)`)
-- `VN.visited` — Visited module
+- `VN.visited` — Visited module (incl. `markChoice/hasChoice`)
+- `VN.gallery` — Gallery module (incl. `unlockBG/unlockBGM/bgs/bgms/clearAll`)
 - `VN.getBacklog()` — copy of ring buffer
 - `VN.setAutoAdvance(bool)` / `VN.isAutoAdvance()`
+- `VN.previewBGM(file)` / `VN.previewBGMStop()` — for jukebox playback
 - `VN.restart()` — reload current script from event 0
 
 ---

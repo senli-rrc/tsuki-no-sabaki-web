@@ -666,6 +666,7 @@ const VN = (() => {
     // A scene change always invalidates the previous speaker's portrait.
     // Clear it now so stale portraits never bleed into the new scene.
     clearPortrait();
+    Gallery.unlockBG(name);
     const img = await loadImg(ASSET.bg(name));
     if (!img) return;
     bgCtx.clearRect(0, 0, W, H);
@@ -817,10 +818,20 @@ const VN = (() => {
       dirty = false;
     }
     function mkKey(s, i) { return `${s}:${i}`; }
+    function mkChoiceKey(s, evIdx, optIdx) { return `c:${s}:${evIdx}:${optIdx}`; }
     return {
       has(s, i) { return set.has(mkKey(s, i)); },
       mark(s, i) {
         const k = mkKey(s, i);
+        if (set.has(k)) return;
+        set.add(k);
+        dirty = true;
+        clearTimeout(flushTimer);
+        flushTimer = setTimeout(flush, 600);
+      },
+      hasChoice(s, evIdx, optIdx) { return set.has(mkChoiceKey(s, evIdx, optIdx)); },
+      markChoice(s, evIdx, optIdx) {
+        const k = mkChoiceKey(s, evIdx, optIdx);
         if (set.has(k)) return;
         set.add(k);
         dirty = true;
@@ -833,6 +844,51 @@ const VN = (() => {
     };
   })();
   window.addEventListener('beforeunload', () => { try { Visited.flush(); } catch (e) {} });
+
+  // ── Gallery (unlocked CG backgrounds + BGM tracks) ─
+  // Items unlock as they appear in play; browsable from main menu + pause menu.
+  const GALLERY_KEY = 'tsuki.gallery.v1';
+  const Gallery = (() => {
+    let bgs, bgms;
+    try {
+      const raw = JSON.parse(localStorage.getItem(GALLERY_KEY) || '{}');
+      bgs  = new Set(raw.bgs || []);
+      bgms = new Set(raw.bgms || []);
+    } catch (e) { bgs = new Set(); bgms = new Set(); }
+    let dirty = false;
+    let flushTimer = null;
+    function flush() {
+      if (!dirty) return;
+      try {
+        localStorage.setItem(GALLERY_KEY, JSON.stringify({
+          bgs: [...bgs], bgms: [...bgms],
+        }));
+      } catch (e) {}
+      dirty = false;
+    }
+    function scheduleFlush() {
+      clearTimeout(flushTimer);
+      flushTimer = setTimeout(flush, 600);
+    }
+    return {
+      unlockBG(name) {
+        if (!name || bgs.has(name)) return;
+        bgs.add(name); dirty = true; scheduleFlush();
+      },
+      unlockBGM(file) {
+        if (!file || bgms.has(file)) return;
+        bgms.add(file); dirty = true; scheduleFlush();
+      },
+      bgs()  { return [...bgs].sort(); },
+      bgms() { return [...bgms].sort(); },
+      hasBG(name)  { return bgs.has(name); },
+      hasBGM(file) { return bgms.has(file); },
+      size: () => bgs.size + bgms.size,
+      clearAll() { bgs.clear(); bgms.clear(); dirty = true; flush(); },
+      flush,
+    };
+  })();
+  window.addEventListener('beforeunload', () => { try { Gallery.flush(); } catch (e) {} });
 
   // ── Backlog (dialogue history, in-memory ring buffer) ─
   const BACKLOG_MAX = 200;
@@ -902,6 +958,7 @@ const VN = (() => {
     if (!file || file === currentBgmFile) return;  // avoid restarting same track
     if (bgmEl) { bgmEl.pause(); bgmEl = null; }
     currentBgmFile = file;
+    Gallery.unlockBGM(file);
     bgmEl = new Audio(ASSET.bgm(file));
     bgmEl.loop = true;
     bgmEl.volume = Settings.get('muted') ? 0 : Settings.get('bgmVolume');
@@ -1164,7 +1221,7 @@ const VN = (() => {
 
         case 'choice_begin':
           if (ev.choices && ev.choices.length) {
-            showChoiceMenu(ev.choices);
+            showChoiceMenu(ev.choices, cursor - 1);
             return;
           }
           break;
@@ -1313,9 +1370,15 @@ const VN = (() => {
     const sp = document.getElementById('settings-panel');
     const pm = document.getElementById('pause-menu');
     const sl = document.getElementById('saveload-panel');
+    const bl = document.getElementById('backlog-panel');
+    const hp = document.getElementById('help-panel');
+    const gp = document.getElementById('gallery-panel');
     if ((sp && sp.style.display === 'flex') ||
         (pm && pm.style.display === 'flex') ||
-        (sl && sl.style.display === 'flex')) return;
+        (sl && sl.style.display === 'flex') ||
+        (bl && bl.style.display === 'flex') ||
+        (hp && hp.style.display === 'flex') ||
+        (gp && gp.style.display === 'flex')) return;
 
     if (e.code === 'Space' || e.code === 'Enter') {
       e.preventDefault();
@@ -1546,17 +1609,21 @@ const VN = (() => {
   };
 
   // ── Choice menu ───────────────────────────────────
-  function showChoiceMenu(choices) {
+  function showChoiceMenu(choices, choiceEvIdx) {
     choiceMenu.innerHTML = '';
     choiceMenu.style.display = 'flex';
-    choices.forEach(c => {
+    choices.forEach((c, optIdx) => {
       const btn = document.createElement('button');
       btn.className = 'choice-btn';
+      if (choiceEvIdx != null && Visited.hasChoice(currentScript, choiceEvIdx, optIdx)) {
+        btn.classList.add('choice-visited');
+      }
       // Show zh translation when in Chinese mode, fall back to jp text
       const label = (currentLang === 'cn' && c.zh) ? c.zh : c.text;
       btn.textContent = label;
       btn.onclick = () => {
         playSE('select');
+        if (choiceEvIdx != null) Visited.markChoice(currentScript, choiceEvIdx, optIdx);
         choiceMenu.style.display = 'none';
         cursor = c.target_cursor || cursor;
         execute();
@@ -1801,7 +1868,17 @@ const VN = (() => {
     settings: Settings,
     saves:    Saves,
     visited:  Visited,
+    gallery:  Gallery,
     getBacklog: () => backlog.slice(),
+    // Preview a BGM file in the jukebox (respects settings.bgmVolume/mute).
+    // Pass null to stop.
+    previewBGM: (file) => {
+      if (!file) { stopBGM(); return; }
+      if (file === currentBgmFile) return;
+      stopBGM();
+      playBGM(file);
+    },
+    previewBGMStop: () => stopBGM(),
     setAutoAdvance(on) { autoAdvance = !!on; if (!autoAdvance) cancelAutoAdvance();
       else if (waitingClick && waitSource === 'text') scheduleAutoAdvance('text');
       updateStatus(); },
